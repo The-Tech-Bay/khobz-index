@@ -1,0 +1,40 @@
+{
+  "data": [
+    {
+      "area_code": "212",
+      "area": "Morocco",
+      "item_code": "16",
+      "item": "Wheat",
+      "element": "Consumer prices",
+      "year": "2025",
+      "months": "12",
+      "value": 7.5,
+      "unit": "LCU per kg",
+      "currency": "MAD"
+    },
+    {
+      "area_code": "818",
+      "area": "Egypt",
+      "item_code": "268",
+      "item": "Sunflower oil",
+      "element": "Consumer prices",
+      "year": "2025",
+      "months": "11",
+      "value": 42.1,
+      "unit": "LCU per L",
+      "currency": "EGP"
+    },
+    {
+      "area_code": "144",
+      "area": "Sri Lanka",
+      "item_code": "31",
+      "item": "Rice",
+      "element": "Consumer prices",
+      "year": "2025",
+      "months": "10",
+      "value": 185.0,
+      "unit": "LCU per kg",
+      "currency": "LKR"
+    }
+  ]
+}

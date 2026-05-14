@@ -1,0 +1,47 @@
+{
+  "basket_id": "mena-v1.0",
+  "region": "mena",
+  "basket_name": "Khobz basket",
+  "effective_from": "2026-01-01",
+  "superseded_by": null,
+  "items": [
+    {
+      "commodity_code": "23112",
+      "commodity_name": "Wheat flour",
+      "faostat_item_code": 16,
+      "unit": "kg",
+      "quantity": 1.0,
+      "kcal_per_unit": 3640,
+      "weight": 0.3
+    },
+    {
+      "commodity_code": "21531",
+      "commodity_name": "Cooking oil",
+      "faostat_item_code": 268,
+      "unit": "L",
+      "quantity": 1.0,
+      "kcal_per_unit": 8840,
+      "weight": 0.25
+    },
+    {
+      "commodity_code": "23511",
+      "commodity_name": "Sugar, refined",
+      "faostat_item_code": 2543,
+      "unit": "kg",
+      "quantity": 1.0,
+      "kcal_per_unit": 3870,
+      "weight": 0.15
+    },
+    {
+      "commodity_code": "01342",
+      "commodity_name": "Pulses (lentils/chickpeas)",
+      "faostat_item_code": 186,
+      "unit": "kg",
+      "quantity": 1.0,
+      "kcal_per_unit": 3530,
+      "weight": 0.3
+    }
+  ],
+  "target_kcal": 15400,
+  "methodology_version": "1.0.0"
+}

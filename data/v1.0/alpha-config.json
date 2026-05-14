@@ -1,0 +1,966 @@
+{
+  "AD": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "AE": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "AF": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "AG": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "AI": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "AL": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "AM": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "AO": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "AR": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "AS": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "AT": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "AU": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "AW": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "AX": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "AZ": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "BA": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "BB": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "BD": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "BE": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "BF": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "BG": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "BH": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "BI": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "BJ": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "BL": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "BM": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "BN": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "BO": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "BQ": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "BR": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "BS": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "BT": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "BW": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "BY": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "BZ": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "CA": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "CD": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "CF": {
+    "alpha": 0.35,
+    "market_type": "low_trust",
+    "rationale": "data-schema.md section 3.3 example: low_trust"
+  },
+  "CG": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "CH": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "CI": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "CK": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "CL": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "CM": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "CN": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "CO": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "CR": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "CU": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "CV": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "CW": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "CY": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "CZ": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "DE": {
+    "alpha": 0.8,
+    "market_type": "high_trust",
+    "rationale": "data-schema.md section 3.3 example: high_trust"
+  },
+  "DJ": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "DK": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "DM": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "DO": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "DZ": {
+    "alpha": 0.5,
+    "market_type": "subsidy_heavy",
+    "rationale": "data-schema.md section 3.3 example: subsidy_heavy"
+  },
+  "EC": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "EE": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "EG": {
+    "alpha": 0.5,
+    "market_type": "subsidy_heavy",
+    "rationale": "data-schema.md section 3.3 example: subsidy_heavy"
+  },
+  "EH": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "ER": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "ES": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "ET": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "FI": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "FJ": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "FK": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "FM": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "FO": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "FR": {
+    "alpha": 0.8,
+    "market_type": "high_trust",
+    "rationale": "data-schema.md section 3.3 example: high_trust"
+  },
+  "GA": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "GB": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "GD": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "GE": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "GF": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "GG": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "GH": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "GI": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "GL": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "GM": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "GN": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "GP": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "GQ": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "GR": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "GT": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "GU": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "GW": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "GY": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "HK": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "HN": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "HR": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "HT": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "HU": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "ID": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "IE": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "IL": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "IM": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "IN": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "IO": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "IQ": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "IR": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "IS": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "IT": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "JE": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "JM": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "JO": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "JP": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "KE": {
+    "alpha": 0.65,
+    "market_type": "standard",
+    "rationale": "data-schema.md section 3.3 example: standard"
+  },
+  "KG": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "KH": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "KI": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "KM": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "KN": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "KP": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "KR": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "KW": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "KY": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "KZ": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "LA": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "LB": {
+    "alpha": 0.35,
+    "market_type": "low_trust",
+    "rationale": "data-schema.md section 3.3 example: low_trust"
+  },
+  "LC": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "LI": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "LK": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "LR": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "LS": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "LT": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "LU": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "LV": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "LY": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "MA": {
+    "alpha": 0.65,
+    "market_type": "standard",
+    "rationale": "data-schema.md section 3.3 example: standard"
+  },
+  "MC": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "MD": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "ME": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "MF": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "MG": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "MH": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "MK": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "ML": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "MM": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "MN": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "MO": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "MP": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "MQ": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "MR": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "MS": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "MT": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "MU": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "MV": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "MW": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "MX": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "MY": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "MZ": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "NA": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "NC": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "NE": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "NG": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "NI": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "NL": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "NO": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "NP": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "NR": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "NU": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "NZ": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "OM": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "PA": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "PE": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "PF": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "PG": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "PH": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "PK": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "PL": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "PM": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "PR": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "PS": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "PT": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "PW": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "PY": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "QA": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "RO": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "RS": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "RU": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "RW": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "SA": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "SB": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "SC": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "SD": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "SE": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "SG": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "SH": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "SI": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "SJ": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "SK": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "SL": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "SM": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "SN": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "SO": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "SR": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "SS": {
+    "alpha": 0.35,
+    "market_type": "low_trust",
+    "rationale": "data-schema.md section 3.3 example: low_trust"
+  },
+  "ST": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "SV": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "SX": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "SY": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "SZ": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "TD": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "TG": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "TH": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "TJ": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "TK": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "TL": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "TM": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "TN": {
+    "alpha": 0.5,
+    "market_type": "subsidy_heavy",
+    "rationale": "data-schema.md section 3.3 example: subsidy_heavy"
+  },
+  "TO": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "TR": {
+    "alpha": 0.65,
+    "market_type": "standard",
+    "rationale": "data-schema.md section 3.3 example: standard"
+  },
+  "TT": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "TV": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "TW": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "TZ": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "UA": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "UG": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "US": {
+    "alpha": 0.8,
+    "market_type": "high_trust",
+    "rationale": "data-schema.md section 3.3 example: high_trust"
+  },
+  "UY": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "UZ": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "VA": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "VC": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "VE": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "VG": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "VI": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "VN": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "VU": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "WF": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "WS": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "XK": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "YE": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "YT": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "ZA": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "ZM": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  },
+  "ZW": {
+    "alpha": 0.65,
+    "market_type": "standard"
+  }
+}

@@ -1,0 +1,286 @@
+.page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-4) var(--space-16);
+}
+
+@media (min-width: 768px) {
+  .page {
+    padding: var(--space-10) var(--space-8) var(--space-20);
+  }
+}
+
+.title {
+  font-size: var(--text-display);
+  line-height: var(--lh-display);
+  letter-spacing: var(--ls-display);
+  margin-bottom: var(--space-4);
+}
+
+.intro {
+  font-size: var(--text-lg);
+  line-height: var(--lh-lg);
+  color: var(--fg-muted);
+  margin-bottom: var(--space-10);
+}
+
+.section {
+  margin-bottom: var(--space-10);
+}
+
+.sectionTitle {
+  font-size: var(--text-xl);
+  margin-bottom: var(--space-4);
+}
+
+.body {
+  font-size: var(--text-md);
+  line-height: var(--lh-md);
+  color: var(--fg-default);
+  margin-bottom: var(--space-4);
+}
+
+.callout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-8);
+  background: var(--direction-incoming-bg);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--space-6);
+  text-align: center;
+}
+
+.calloutEmphasis {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--direction-incoming-text);
+}
+
+.calloutSub {
+  font-size: var(--text-md);
+  color: var(--direction-incoming-text);
+  opacity: 0.8;
+  margin-top: var(--space-2);
+}
+
+/* Formula diagram */
+.formulaBox {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--elevation-1);
+}
+
+.formulaDiagram {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.formulaBlock {
+  padding: var(--space-3) var(--space-5);
+  background: var(--bg-muted);
+  border-radius: var(--radius-lg);
+  font-weight: 700;
+  font-size: var(--text-lg);
+}
+
+.formulaEquals,
+.formulaPlus {
+  font-size: var(--text-xl);
+  font-weight: 300;
+  color: var(--fg-muted);
+}
+
+.formulaGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.formulaBlockLocal {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--direction-incoming-bg);
+  border: 1px solid var(--direction-incoming);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--direction-incoming-text);
+}
+
+.formulaBlockGlobal {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--intent-info-bg);
+  border: 1px solid var(--intent-info);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--intent-info-text);
+}
+
+.formulaAlpha {
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.formulaTimes {
+  color: var(--fg-subtle);
+}
+
+.formulaLabel {
+  font-weight: 600;
+}
+
+.formulaLegend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-muted);
+}
+
+.formulaLegendItem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--fg-muted);
+  line-height: 1.5;
+}
+
+.dotLocal,
+.dotGlobal,
+.dotAlpha {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  min-width: 12px;
+  border-radius: var(--radius-sm);
+  margin-top: 4px;
+}
+
+.dotLocal {
+  background: var(--direction-incoming);
+}
+.dotGlobal {
+  background: var(--intent-info);
+}
+.dotAlpha {
+  background: var(--fg-muted);
+}
+
+/* Table */
+.tableWrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.table th,
+.table td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  font-size: var(--text-sm);
+  border-bottom: 1px solid var(--border-muted);
+}
+
+.table th {
+  font-weight: 600;
+  color: var(--fg-muted);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--bg-subtle);
+}
+
+.regionName {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.basketName {
+  font-style: italic;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.numeric {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* FAQ */
+.faqList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.faqItem {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.faqQuestion {
+  padding: var(--space-4) var(--space-5);
+  font-weight: 600;
+  font-size: var(--text-md);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+}
+
+.faqQuestion::before {
+  content: "▸";
+  transition: transform var(--duration-fast) var(--ease-standard);
+  color: var(--fg-muted);
+}
+
+.faqItem[open] .faqQuestion::before {
+  transform: rotate(90deg);
+}
+
+.faqQuestion::-webkit-details-marker {
+  display: none;
+}
+
+.faqAnswer {
+  padding: 0 var(--space-5) var(--space-4);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--fg-muted);
+}
+
+.license {
+  font-size: var(--text-sm);
+  color: var(--fg-muted);
+  padding: var(--space-4);
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-4);
+}

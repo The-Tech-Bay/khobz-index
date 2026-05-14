@@ -1,0 +1,46 @@
+{
+  "name": "khobz-index",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Karama Khobz Index — weekly pipeline and static archive tooling",
+  "packageManager": "bun@1.2.5",
+  "engines": {
+    "bun": ">=1.2.0"
+  },
+  "scripts": {
+    "prepare": "lefthook install",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome lint .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "format:check": "biome ci . --linter-enabled=false --assist-enabled=false",
+    "test": "bun test tests/unit",
+    "test:live": "bun test tests/live",
+    "test:all": "bun test",
+    "pipeline:prefetch": "bun run scripts/fetch-faostat-prices.ts",
+    "pipeline": "bun run scripts/fetch-faostat-prices.ts && FAOSTAT_CP_JSON_PATH=data/reference/faostat-pp-backfill.json bun run src/pipeline/run.ts",
+    "cf:bootstrap": "bash scripts/cf-bootstrap.sh",
+    "cf:provision-deploy": "bun run scripts/cf-provision-and-deploy.ts",
+    "dev:api": "wrangler dev",
+    "deploy:api": "wrangler deploy",
+    "deploy:api:dry-run": "wrangler deploy --dry-run",
+    "cf:check": "wrangler deploy --dry-run",
+    "pages:build": "cd landing && bun install --frozen-lockfile && bun run build",
+    "pages:deploy": "wrangler pages project create khobz-index-landing --production-branch main 2>/dev/null; wrangler pages deploy landing/dist --project-name khobz-index-landing"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.0.0",
+    "@cloudflare/workers-types": "^4.20260511.1",
+    "@types/bun": "^1.2.5",
+    "lefthook": "^1.11.13",
+    "typescript": "^5.8.3",
+    "wrangler": "^4.90.0"
+  },
+  "dependencies": {
+    "@octokit/rest": "^22.0.1",
+    "hono": "^4.12.18",
+    "jose": "^6.2.3",
+    "zod": "^3.24.0"
+  }
+}

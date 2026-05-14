@@ -1,0 +1,9 @@
+{
+  "commodity": "wheat_flour",
+  "price_usd": 0.42,
+  "currency": "USD",
+  "price_unit": "kg",
+  "date": "2026-04",
+  "source_id": "fixture",
+  "fetched_at": "2026-05-01T06:00:00.000Z"
+}

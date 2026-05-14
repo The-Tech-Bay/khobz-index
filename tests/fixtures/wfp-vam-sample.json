@@ -1,0 +1,24 @@
+{
+  "items": [
+    {
+      "adm0_code": "MAR",
+      "country_iso2": "MA",
+      "commodity": "Wheat flour",
+      "price": 7.5,
+      "price_type": "Retail",
+      "currency_code": "MAD",
+      "date": "2026-04-15",
+      "price_usd": 0.74
+    },
+    {
+      "adm0_code": "EGY",
+      "country_iso2": "EG",
+      "commodity": "Sunflower oil",
+      "price": 42.0,
+      "price_type": "Retail",
+      "currency_code": "EGP",
+      "date": "2026-04-10",
+      "price_usd": 0.88
+    }
+  ]
+}

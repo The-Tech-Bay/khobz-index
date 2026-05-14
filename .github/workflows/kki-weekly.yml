@@ -1,0 +1,75 @@
+name: KKI weekly pipeline
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+# Cron on GitHub Actions is best-effort (~±15 min drift). Monday 06:00 UTC remains the contract.
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      first_monday: ${{ steps.calendar.outputs.first_monday }}
+      archive_month: ${{ steps.calendar.outputs.archive_month }}
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Calendar gate + archive month label
+        id: calendar
+        run: |
+          set -euo pipefail
+          DOW=$(date -u +%u)
+          DOM=$(date -u +%d)
+          ARCHIVE_MONTH=$(date -u -d "$(date -u +%Y-%m-01) -1 month" +%Y-%m)
+          echo "archive_month=$ARCHIVE_MONTH" >> "$GITHUB_OUTPUT"
+          if [ "$DOW" -eq 1 ] && [ "$DOM" -le 7 ]; then
+            echo "first_monday=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "first_monday=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run pipeline (fetch → validate → calculate → store stub)
+        run: bun run pipeline -- --month=${{ steps.calendar.outputs.archive_month }}
+
+      - name: Store to R2 (§3.4B — placeholder)
+        run: |
+          echo "Wire wrangler/S3 sync here in §3.4B when snapshots + credentials are ready."
+          echo "Secrets CLOUDFLARE_API_TOKEN / R2_* are reserved for that step."
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: khobz-archive
+          path: build/
+
+  publish:
+    needs: pipeline
+    if: success() && needs.pipeline.outputs.first_monday == 'true'
+    uses: ./.github/workflows/publish.yml
+    with:
+      month: ${{ needs.pipeline.outputs.archive_month }}
+    secrets: inherit
+
+  notify_failure:
+    needs: pipeline
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Failure marker (enable repo Notifications → Actions for emails)
+        run: |
+          echo "::error::KKI weekly pipeline failed for run ${{ github.run_id }}. Check logs and use workflow_dispatch to retry."

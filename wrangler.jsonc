@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // After provisioning: paste real KV namespace id from `bash scripts/cf-bootstrap.sh` (see docs/ops/runbook.md §1.2)
+  "name": "khobz-index-api",
+  "main": "src/api/index.ts",
+  "compatibility_date": "2026-05-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "SUPABASE_JWT_AUDIENCE": "authenticated"
+  },
+  "kv_namespaces": [
+    {
+      "binding": "KKI_KV",
+      "id": "98ddd13ae32647dd92d253c6f1144676",
+      "remote": true
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "KKI_DATA",
+      "bucket_name": "khobz-index-snapshots"
+    }
+  ]
+}

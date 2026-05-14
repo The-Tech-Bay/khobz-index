@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Karama Khobz Index — What does a day of food cost around the world?</title>
+    <meta name="description" content="The Karama Khobz Index (KKI) measures the local-currency cost of one day of staple subsistence calories across 15+ countries. An open, calorie-grounded alternative to the Big Mac Index." />
+    <link rel="canonical" href="https://karama.thebay.ma/khobz" />
+
+    <meta property="og:title" content="Karama Khobz Index — What does a day of food cost around the world?" />
+    <meta property="og:description" content="An open, calorie-grounded food price index tracking the cost of daily subsistence across 15+ countries." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://karama.thebay.ma/khobz" />
+    <meta property="og:image" content="https://karama.thebay.ma/khobz/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Karama Khobz Index" />
+    <meta name="twitter:description" content="What does a day of food cost around the world?" />
+    <meta name="twitter:image" content="https://karama.thebay.ma/khobz/og-image.png" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      "name": "Karama Khobz Index (KKI)",
+      "description": "Monthly reference basket cost dataset measuring the local-currency cost of one day of staple subsistence calories (~2,200 kcal) across 15+ countries.",
+      "url": "https://karama.thebay.ma/khobz",
+      "license": "https://creativecommons.org/licenses/by/4.0/",
+      "temporalCoverage": "2025-11/..",
+      "creator": {
+        "@type": "Organization",
+        "name": "Karama"
+      },
+      "distribution": {
+        "@type": "DataDownload",
+        "encodingFormat": "application/json",
+        "contentUrl": "https://github.com/The-Tech-Bay/khobz-index/releases"
+      }
+    }
+    </script>
+
+    <script>
+      (function() {
+        var t = localStorage.getItem('kki-theme');
+        if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

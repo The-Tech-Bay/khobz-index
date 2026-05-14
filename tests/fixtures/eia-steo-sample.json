@@ -1,0 +1,21 @@
+{
+  "response": {
+    "total": "1",
+    "dateFormat": "YYYY-MM",
+    "frequency": "monthly",
+    "data": [
+      {
+        "period": "2026-01",
+        "duoarea": "NUS-NMX",
+        "area-name": "NA",
+        "product": "EPCBRENT",
+        "product-name": "Europe Brent Spot Price",
+        "process": "PE2",
+        "series": "RBC",
+        "series-description": "Spot",
+        "value": "78.2",
+        "units": "$/BBL"
+      }
+    ]
+  }
+}

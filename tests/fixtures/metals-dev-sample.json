@@ -1,0 +1,10 @@
+{
+  "currency": "USD",
+  "date": "2026-05-10",
+  "metals": {
+    "gold": 2348.0,
+    "silver": 28.4,
+    "lbma_gold_am": 2345.0,
+    "lbma_gold_pm": 2350.0
+  }
+}

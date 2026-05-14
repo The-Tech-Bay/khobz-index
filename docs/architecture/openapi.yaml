@@ -1,0 +1,579 @@
+openapi: 3.1.0
+jsonSchemaDialect: https://spec.openapis.org/oas/3.1/dialect/base
+
+info:
+  title: Khobz Index (KKI) Closed API
+  description: |
+    Closed authenticated API for the Karama backend (Track A) only.
+    Supabase session JWT is exchanged for a short-lived opaque KKI token.
+    See api-contract.md for prose contract, auth flow, rate limits, and static archive.
+  version: 1.0.0
+  contact:
+    name: Karama / khobz-index
+
+servers:
+  - url: https://kki-api.example.workers.dev
+    description: Dedicated Cloudflare Worker hostname (replace at deploy)
+
+tags:
+  - name: Auth
+    description: Supabase JWT exchange
+  - name: KKI
+    description: Index record reads
+  - name: Basket
+    description: Basket definition reads
+  - name: Health
+    description: Unauthenticated health
+
+paths:
+  /auth/exchange:
+    post:
+      tags: [Auth]
+      summary: Exchange Supabase JWT for KKI access token
+      description: |
+        Verifies Supabase Auth access JWT via JWKS, returns opaque Bearer token (15 min TTL).
+        Rate limit 10 req/min per Supabase `sub`.
+      operationId: authExchange
+      security:
+        - SupabaseJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+      responses:
+        "200":
+          description: Token minted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /kki/{country}/{month}:
+    get:
+      tags: [KKI]
+      summary: KKI record by country and month
+      description: |
+        Returns IndexRecord for calendar month. Optional warnings for degraded/stale/version mismatch.
+        Rate limit 60 req/min per KKI access token.
+      operationId: getKkiByMonth
+      security:
+        - KkiToken: []
+      parameters:
+        - $ref: "#/components/parameters/Country"
+        - $ref: "#/components/parameters/MonthYm"
+        - $ref: "#/components/parameters/MethodologyVersion"
+      responses:
+        "200":
+          description: Index record (warnings optional)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KkiRecordResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /kki/latest/{country}:
+    get:
+      tags: [KKI]
+      summary: Latest KKI record for country
+      description: Most recent computed snapshot for the country. Same semantics as GET /kki/{country}/{month}.
+      operationId: getKkiLatest
+      security:
+        - KkiToken: []
+      parameters:
+        - $ref: "#/components/parameters/Country"
+        - $ref: "#/components/parameters/MethodologyVersion"
+      responses:
+        "200":
+          description: Latest index record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KkiRecordResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /basket/{version}:
+    get:
+      tags: [Basket]
+      summary: Basket definitions for methodology version
+      description: |
+        `version` is methodology semver (e.g. 1.0.0). Returns all BasketVersion rows for that methodology.
+        Rate limit 60 req/min per KKI access token.
+      operationId: getBasketsByMethodology
+      security:
+        - KkiToken: []
+      parameters:
+        - name: version
+          in: path
+          required: true
+          description: Methodology semver MAJOR.MINOR.PATCH
+          schema:
+            type: string
+            pattern: '^[0-9]+\.[0-9]+\.[0-9]+$'
+            example: "1.0.0"
+      responses:
+        "200":
+          description: Baskets for methodology
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasketListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /health:
+    get:
+      tags: [Health]
+      summary: Pipeline and source health
+      description: Unauthenticated. Rate limit 120 req/min per IP.
+      operationId: getHealth
+      security: []
+      responses:
+        "200":
+          description: Health snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+components:
+  securitySchemes:
+    SupabaseJwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase Auth access_token (RS256). Used only on POST /auth/exchange.
+    KkiToken:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+      description: Opaque KKI access token from /auth/exchange (15 min TTL).
+
+  parameters:
+    Country:
+      name: country
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 2
+        maxLength: 2
+        pattern: "^[A-Z]{2}$"
+      example: MA
+    MonthYm:
+      name: month
+      in: path
+      required: true
+      description: Calendar month of index period
+      schema:
+        type: string
+        pattern: '^\d{4}-\d{2}$'
+      example: "2026-04"
+    MethodologyVersion:
+      name: methodology_version
+      in: query
+      required: false
+      schema:
+        type: string
+        pattern: '^[0-9]+\.[0-9]+\.[0-9]+$'
+      example: "1.0.0"
+
+  responses:
+    Unauthorized:
+      description: Missing, invalid, or expired token
+      headers:
+        Retry-After:
+          description: Present only when tied to backoff; usually omitted for 401
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+          examples:
+            unauthorized:
+              value:
+                error:
+                  code: unauthorized
+                  message: Invalid or expired credentials
+    NotFound:
+      description: Country, month, or methodology data not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+          examples:
+            notFound:
+              value:
+                error:
+                  code: not-found
+                  message: No KKI record for requested key
+    RateLimited:
+      description: Rate limit exceeded
+      headers:
+        Retry-After:
+          description: Seconds until retry
+          required: true
+          schema:
+            type: integer
+            example: 45
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+          examples:
+            rateLimited:
+              value:
+                error:
+                  code: rate-limited
+                  message: Too many requests
+    ValidationError:
+      description: Malformed request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    InternalError:
+      description: Unexpected server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+
+  schemas:
+    TokenResponse:
+      type: object
+      required: [access_token, token_type, expires_in, scope]
+      additionalProperties: false
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          const: Bearer
+        expires_in:
+          type: integer
+          description: Seconds until expiry (900 for MVP)
+          example: 900
+        scope:
+          type: string
+          const: kki:read
+
+    Slot:
+      type: string
+      enum:
+        - global_cereals_oils_sugar
+        - local_market_prices
+        - gold_spot
+        - crude_oil_energy
+
+    SourceContribution:
+      type: object
+      required: [slot, source_ids, tiers]
+      additionalProperties: false
+      properties:
+        slot:
+          $ref: "#/components/schemas/Slot"
+        source_ids:
+          type: array
+          items:
+            type: string
+        tiers:
+          type: array
+          items:
+            type: integer
+            enum: [1, 2, 3]
+
+    QualityLevel:
+      type: string
+      enum: [full, degraded, global_only]
+
+    IndexRecord:
+      type: object
+      required:
+        - country_code
+        - month
+        - kki_value
+        - kki_value_usd
+        - currency
+        - alpha
+        - local_basket_cost
+        - global_basket_cost
+        - basket_version
+        - methodology_version
+        - computed_at
+        - source_summary
+        - quality
+        - record_hash
+      additionalProperties: false
+      properties:
+        country_code:
+          type: string
+          minLength: 2
+          maxLength: 2
+        month:
+          type: string
+          pattern: '^\d{4}-\d{2}$'
+        kki_value:
+          type: number
+          exclusiveMinimum: 0
+        kki_value_usd:
+          type: number
+          exclusiveMinimum: 0
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        alpha:
+          type: number
+          minimum: 0
+          maximum: 1
+        local_basket_cost:
+          type: number
+          minimum: 0
+        global_basket_cost:
+          type: number
+          exclusiveMinimum: 0
+        basket_version:
+          type: string
+          minLength: 1
+        methodology_version:
+          type: string
+          pattern: '^[0-9]+\.[0-9]+\.[0-9]+$'
+        computed_at:
+          type: string
+          format: date-time
+        source_summary:
+          type: array
+          items:
+            $ref: "#/components/schemas/SourceContribution"
+        quality:
+          $ref: "#/components/schemas/QualityLevel"
+        record_hash:
+          type: string
+          pattern: '^[a-f0-9]{64}$'
+
+    Warning:
+      type: object
+      required: [code, message]
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+          enum:
+            - source-degraded
+            - stale-data
+            - version-mismatch
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+
+    KkiRecordResponse:
+      type: object
+      required: [data]
+      additionalProperties: false
+      properties:
+        data:
+          $ref: "#/components/schemas/IndexRecord"
+        warnings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Warning"
+
+    Region:
+      type: string
+      enum:
+        - mena
+        - south_asia
+        - east_southern_africa
+        - west_africa
+        - east_asia
+        - latin_america
+        - oecd
+
+    BasketItem:
+      type: object
+      required:
+        - commodity_code
+        - commodity_name
+        - faostat_item_code
+        - unit
+        - quantity
+        - kcal_per_unit
+        - weight
+      additionalProperties: false
+      properties:
+        commodity_code:
+          type: string
+          minLength: 3
+        commodity_name:
+          type: string
+          minLength: 1
+        faostat_item_code:
+          type: integer
+          minimum: 1
+        unit:
+          type: string
+          enum: [kg, L, ct]
+        quantity:
+          type: number
+          exclusiveMinimum: 0
+        kcal_per_unit:
+          type: number
+          exclusiveMinimum: 0
+        weight:
+          type: number
+          minimum: 0
+          maximum: 1
+
+    BasketVersion:
+      type: object
+      required:
+        - basket_id
+        - region
+        - basket_name
+        - effective_from
+        - superseded_by
+        - items
+        - target_kcal
+        - methodology_version
+      additionalProperties: false
+      properties:
+        basket_id:
+          type: string
+          minLength: 1
+        region:
+          $ref: "#/components/schemas/Region"
+        basket_name:
+          type: string
+          minLength: 1
+        effective_from:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+        superseded_by:
+          type: ["string", "null"]
+        items:
+          type: array
+          minItems: 3
+          maxItems: 8
+          items:
+            $ref: "#/components/schemas/BasketItem"
+        target_kcal:
+          type: integer
+          minimum: 14000
+          maximum: 17000
+        methodology_version:
+          type: string
+          pattern: '^[0-9]+\.[0-9]+\.[0-9]+$'
+
+    BasketListResponse:
+      type: object
+      required: [methodology_version, baskets]
+      additionalProperties: false
+      properties:
+        methodology_version:
+          type: string
+          pattern: '^[0-9]+\.[0-9]+\.[0-9]+$'
+        baskets:
+          type: array
+          items:
+            $ref: "#/components/schemas/BasketVersion"
+
+    SourceStatus:
+      type: string
+      enum: [up, down, degraded, unknown]
+
+    PipelineStatus:
+      type: string
+      enum: [healthy, degraded, unknown]
+
+    HealthResponse:
+      type: object
+      required: [ok, service, time, pipeline, sources]
+      additionalProperties: false
+      properties:
+        ok:
+          type: boolean
+        service:
+          type: string
+          const: khobz-index-api
+        time:
+          type: string
+          format: date-time
+        pipeline:
+          type: object
+          required: [status, last_successful_run_at, last_run_week_id]
+          additionalProperties: false
+          properties:
+            status:
+              $ref: "#/components/schemas/PipelineStatus"
+            last_successful_run_at:
+              type: string
+              format: date-time
+            last_run_week_id:
+              type: string
+              description: ISO week id e.g. 2026-W19
+        sources:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/SourceStatus"
+
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      additionalProperties: false
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          additionalProperties: false
+          properties:
+            code:
+              type: string
+              enum:
+                - unauthorized
+                - rate-limited
+                - not-found
+                - validation-error
+                - internal-error
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true
+            request_id:
+              type: string

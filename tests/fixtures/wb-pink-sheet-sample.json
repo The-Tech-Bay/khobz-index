@@ -1,0 +1,39 @@
+[
+  {
+    "page": 1,
+    "pages": 1,
+    "per_page": 500,
+    "total": 3,
+    "sourceid": "2",
+    "lastupdated": "2026-04-01"
+  },
+  [
+    {
+      "indicator": { "id": "CRUDE_PETRO", "value": "Crude oil, average, Spot" },
+      "country": { "id": "WLD", "value": "World" },
+      "countryiso3code": "WLD",
+      "date": "2026M02",
+      "value": 78.5,
+      "unit": "dollar per barrel",
+      "decimal": "1"
+    },
+    {
+      "indicator": { "id": "MAIZE", "value": "Maize" },
+      "country": { "id": "WLD", "value": "World" },
+      "countryiso3code": "WLD",
+      "date": "2026M02",
+      "value": 165.0,
+      "unit": "dollar per metric ton",
+      "decimal": "1"
+    },
+    {
+      "indicator": { "id": "RICE_INDICA", "value": "Rice" },
+      "country": { "id": "WLD", "value": "World" },
+      "countryiso3code": "WLD",
+      "date": "2026M02",
+      "value": 520.0,
+      "unit": "dollar per metric ton",
+      "decimal": "1"
+    }
+  ]
+]

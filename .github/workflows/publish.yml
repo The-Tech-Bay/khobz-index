@@ -1,0 +1,227 @@
+name: Publish KKI archive
+
+on:
+  workflow_dispatch:
+    inputs:
+      month:
+        description: Calendar month YYYY-MM for khobz-index-YYYY-MM.* assets (empty = previous UTC month)
+        required: false
+        type: string
+  workflow_call:
+    inputs:
+      month:
+        description: Calendar month YYYY-MM for archive assets
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Resolve publication month
+        id: meta
+        run: |
+          set -euo pipefail
+          EVENT="${{ github.event_name }}"
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            M="${{ github.event.inputs.month }}"
+          else
+            M="${{ inputs.month }}"
+          fi
+          if [ -z "${M// /}" ]; then
+            M=$(date -u -d "$(date -u +%Y-%m-01) -1 month" +%Y-%m)
+          fi
+          echo "month=$M" >> "$GITHUB_OUTPUT"
+          echo "Publishing archive month: $M"
+
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: khobz-archive
+          path: build/
+
+      - name: Generate build artifacts if missing
+        run: |
+          set -euo pipefail
+          MONTH="${{ steps.meta.outputs.month }}"
+          mkdir -p build
+          if [ ! -f "build/khobz-index-${MONTH}.json" ] || [ ! -f "build/khobz-index-${MONTH}.csv" ]; then
+            bun install --frozen-lockfile
+            bun run pipeline -- --month="$MONTH"
+          fi
+
+      - name: Verify archive files
+        run: |
+          MONTH="${{ steps.meta.outputs.month }}"
+          test -f "build/khobz-index-${MONTH}.json"
+          test -f "build/khobz-index-${MONTH}.csv"
+
+      - name: Pin JSON to IPFS via Pinata (non-blocking)
+        id: pin_json
+        continue-on-error: true
+        env:
+          PINATA_JWT: ${{ secrets.PINATA_JWT }}
+          MONTH: ${{ steps.meta.outputs.month }}
+        run: |
+          set -euo pipefail
+          if [ -z "${PINATA_JWT:-}" ]; then
+            echo "PINATA_JWT not set — skipping IPFS pin."
+            exit 0
+          fi
+          RESP=$(curl -sS -X POST "https://uploads.pinata.cloud/v3/files" \
+            -H "Authorization: Bearer ${PINATA_JWT}" \
+            -F "file=@build/khobz-index-${MONTH}.json")
+          echo "$RESP" | tee pinata-json-response.json
+          CID=$(echo "$RESP" | jq -r '.data.cid // .cid // empty')
+          if [ -z "$CID" ] || [ "$CID" = "null" ]; then
+            echo "Pinata response missing cid — treating as soft failure."
+            exit 1
+          fi
+          echo "cid_json=$CID" >> "$GITHUB_OUTPUT"
+
+      - name: Pin CSV to IPFS via Pinata (non-blocking)
+        id: pin_csv
+        continue-on-error: true
+        env:
+          PINATA_JWT: ${{ secrets.PINATA_JWT }}
+          MONTH: ${{ steps.meta.outputs.month }}
+        run: |
+          set -euo pipefail
+          if [ -z "${PINATA_JWT:-}" ]; then
+            echo "PINATA_JWT not set — skipping IPFS pin."
+            exit 0
+          fi
+          RESP=$(curl -sS -X POST "https://uploads.pinata.cloud/v3/files" \
+            -H "Authorization: Bearer ${PINATA_JWT}" \
+            -F "file=@build/khobz-index-${MONTH}.csv")
+          echo "$RESP" | tee pinata-csv-response.json
+          CID=$(echo "$RESP" | jq -r '.data.cid // .cid // empty')
+          if [ -z "$CID" ] || [ "$CID" = "null" ]; then
+            exit 1
+          fi
+          echo "cid_csv=$CID" >> "$GITHUB_OUTPUT"
+
+      - name: Upload to Internet Archive (non-blocking)
+        id: ia_upload
+        continue-on-error: true
+        env:
+          IA_ACCESS_KEY_ID: ${{ secrets.IA_S3_ACCESS_KEY }}
+          IA_SECRET_ACCESS_KEY: ${{ secrets.IA_S3_SECRET_KEY }}
+          MONTH: ${{ steps.meta.outputs.month }}
+        run: |
+          set -euo pipefail
+          if [ -z "${IA_ACCESS_KEY_ID:-}" ] || [ -z "${IA_SECRET_ACCESS_KEY:-}" ]; then
+            echo "IA S3 keys unset — skipping Internet Archive upload."
+            exit 0
+          fi
+          pip install --user 'internetarchive>=5.0,<6'
+          export PATH="$HOME/.local/bin:$PATH"
+          ITEM="khobz-index-${MONTH}"
+          ia upload "$ITEM" \
+            "build/khobz-index-${MONTH}.json" \
+            "build/khobz-index-${MONTH}.csv" \
+            --metadata "title:KKI static archive ${MONTH}" \
+            --metadata "mediatype:data" \
+            --metadata "creator:The Tech Bay / Karama"
+
+      - name: Write release notes
+        env:
+          MONTH: ${{ steps.meta.outputs.month }}
+          CID_JSON: ${{ steps.pin_json.outputs.cid_json }}
+          CID_CSV: ${{ steps.pin_csv.outputs.cid_csv }}
+        run: |
+          cat > RELEASE_NOTES.md << EOF
+          ## Khobz Index archive (${MONTH})
+
+          - **Methodology version:** 1.0.0 (stub until §3.x fills manifest)
+          - **Countries covered:** TBD — populate from snapshot manifest in §3.4B
+          - **Source status:** see pipeline \`state/last-run.json\` when wired (§3.2B+)
+
+          ### IPFS (Pinata)
+
+          - JSON CID: ${CID_JSON:-"(unavailable — configure PINATA_JWT or retry)"}
+          - CSV CID: ${CID_CSV:-"(unavailable — configure PINATA_JWT or retry)"}
+
+          ### Internet Archive
+
+          - Item identifier: \`khobz-index-${MONTH}\` (upload runs when \`IA_S3_ACCESS_KEY\` / \`IA_S3_SECRET_KEY\` are configured; failures are non-blocking per §2.4B).
+
+          Static filenames follow [\`api-contract.md\` §7](docs/architecture/api-contract.md): \`khobz-index-${MONTH}.json\` / \`.csv\`.
+          EOF
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MONTH: ${{ steps.meta.outputs.month }}
+        run: |
+          set -euo pipefail
+          TAG="v${MONTH}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" \
+              "build/khobz-index-${MONTH}.json" \
+              "build/khobz-index-${MONTH}.csv" \
+              --clobber
+            gh release edit "$TAG" --notes-file RELEASE_NOTES.md
+          else
+            gh release create "$TAG" \
+              "build/khobz-index-${MONTH}.json" \
+              "build/khobz-index-${MONTH}.csv" \
+              --title "Khobz Index ${MONTH}" \
+              --notes-file RELEASE_NOTES.md
+          fi
+
+      - name: Write data/LATEST.json pointer
+        env:
+          MONTH: ${{ steps.meta.outputs.month }}
+          CID_JSON: ${{ steps.pin_json.outputs.cid_json }}
+          CID_CSV: ${{ steps.pin_csv.outputs.cid_csv }}
+        run: |
+          mkdir -p data
+          jq -n \
+            --arg month "$MONTH" \
+            --arg tag "v${MONTH}" \
+            --arg generated "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+            --arg json_cid "${CID_JSON:-}" \
+            --arg csv_cid "${CID_CSV:-}" \
+            '{
+              month: $month,
+              release_tag: $tag,
+              methodology_version: "1.0.0",
+              generated_at: $generated,
+              assets: {
+                json: ("khobz-index-" + $month + ".json"),
+                csv: ("khobz-index-" + $month + ".csv")
+              },
+              ipfs: (
+                if ($json_cid | length) > 0 or ($csv_cid | length) > 0 then
+                  {json_cid: $json_cid, csv_cid: $csv_cid}
+                else
+                  {}
+                end
+              )
+            }' > data/LATEST.json
+
+      - name: Commit data/LATEST.json
+        env:
+          MONTH: ${{ steps.meta.outputs.month }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/LATEST.json
+          if git diff --staged --quiet; then
+            echo "No LATEST.json changes."
+            exit 0
+          fi
+          git commit -m "chore(data): update LATEST.json for ${MONTH} [skip ci]"
+          git push

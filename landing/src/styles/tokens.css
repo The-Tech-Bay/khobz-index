@@ -1,0 +1,228 @@
+/* Auto-derived from docs/design/design-system/tokens.json — warm-zellige palette */
+
+:root,
+[data-theme="light"] {
+  /* Raw palette */
+  --raw-ink-950: #0C0E11;
+  --raw-ink-900: #14171C;
+  --raw-ink-800: #1E2228;
+  --raw-ink-700: #2C3038;
+  --raw-ink-600: #3D424C;
+  --raw-ink-500: #555B66;
+  --raw-ink-400: #707783;
+  --raw-ink-300: #8E95A0;
+  --raw-ink-200: #B0B5BD;
+  --raw-ink-100: #D4D7DC;
+  --raw-ink-50: #ECEDF0;
+
+  --raw-sand-900: #3D3528;
+  --raw-sand-800: #5C5040;
+  --raw-sand-700: #7A6B57;
+  --raw-sand-600: #99866E;
+  --raw-sand-500: #B8A189;
+  --raw-sand-400: #CDBBA5;
+  --raw-sand-300: #DDD0BD;
+  --raw-sand-200: #EBE3D6;
+  --raw-sand-100: #F2ECE2;
+  --raw-sand-50: #F8F4ED;
+  --raw-sand-25: #FCFAF6;
+
+  --raw-emerald-900: #0F3D2A;
+  --raw-emerald-800: #165237;
+  --raw-emerald-700: #1E6745;
+  --raw-emerald-600: #2E7D5B;
+  --raw-emerald-500: #3E9470;
+  --raw-emerald-400: #56AB87;
+  --raw-emerald-300: #7DC4A3;
+  --raw-emerald-200: #A8DBBF;
+  --raw-emerald-100: #D3EEDF;
+  --raw-emerald-50: #EBF7F0;
+
+  --raw-amber-900: #4A2D0A;
+  --raw-amber-800: #6B400F;
+  --raw-amber-700: #8E5614;
+  --raw-amber-600: #C57A1F;
+  --raw-amber-500: #D9922E;
+  --raw-amber-400: #E5AB4F;
+  --raw-amber-300: #EFCA82;
+  --raw-amber-200: #F5DEB0;
+  --raw-amber-100: #FAF0DA;
+  --raw-amber-50: #FDF8EE;
+
+  --raw-red-700: #9E2B2B;
+  --raw-red-600: #C53434;
+  --raw-red-500: #DC4A4A;
+  --raw-red-100: #FDE8E8;
+  --raw-red-50: #FEF4F4;
+
+  --raw-blue-700: #1E4F8C;
+  --raw-blue-600: #2B6CB0;
+  --raw-blue-100: #DBEAFE;
+  --raw-blue-50: #EFF6FF;
+
+  --raw-white: #FFFFFF;
+  --raw-black: #000000;
+
+  /* Semantic — light */
+  --fg-default: var(--raw-ink-900);
+  --fg-muted: var(--raw-ink-500);
+  --fg-subtle: var(--raw-ink-400);
+  --fg-inverse: var(--raw-white);
+  --fg-disabled: var(--raw-ink-300);
+  --fg-link: var(--raw-emerald-700);
+
+  --bg-default: var(--raw-sand-25);
+  --bg-surface: var(--raw-white);
+  --bg-elevated: var(--raw-white);
+  --bg-muted: var(--raw-sand-100);
+  --bg-subtle: var(--raw-sand-50);
+  --bg-scrim: rgba(12, 14, 17, 0.4);
+  --bg-inverse: var(--raw-ink-900);
+
+  --border-default: var(--raw-sand-200);
+  --border-muted: var(--raw-sand-100);
+  --border-strong: var(--raw-ink-200);
+  --border-focus: var(--raw-ink-900);
+
+  --direction-incoming: var(--raw-emerald-600);
+  --direction-incoming-bg: var(--raw-emerald-50);
+  --direction-incoming-text: var(--raw-emerald-900);
+  --direction-outgoing: var(--raw-amber-600);
+  --direction-outgoing-bg: var(--raw-amber-50);
+  --direction-outgoing-text: var(--raw-amber-900);
+
+  --intent-info: var(--raw-blue-600);
+  --intent-info-bg: var(--raw-blue-50);
+  --intent-info-text: var(--raw-blue-700);
+  --intent-success: var(--raw-emerald-600);
+  --intent-success-bg: var(--raw-emerald-50);
+  --intent-success-text: var(--raw-emerald-900);
+  --intent-warn: var(--raw-amber-600);
+  --intent-warn-bg: var(--raw-amber-50);
+  --intent-warn-text: var(--raw-amber-900);
+  --intent-error: var(--raw-red-600);
+  --intent-error-bg: var(--raw-red-50);
+  --intent-error-text: var(--raw-red-700);
+
+  /* Elevation */
+  --elevation-1: 0 1px 2px rgba(12, 14, 17, 0.06);
+  --elevation-2: 0 2px 4px rgba(12, 14, 17, 0.06), 0 1px 2px rgba(12, 14, 17, 0.04);
+  --elevation-3: 0 4px 8px rgba(12, 14, 17, 0.08), 0 2px 4px rgba(12, 14, 17, 0.04);
+}
+
+[data-theme="dark"] {
+  --fg-default: var(--raw-sand-50);
+  --fg-muted: var(--raw-ink-300);
+  --fg-subtle: var(--raw-ink-400);
+  --fg-inverse: var(--raw-ink-900);
+  --fg-disabled: var(--raw-ink-600);
+  --fg-link: var(--raw-emerald-400);
+
+  --bg-default: var(--raw-ink-950);
+  --bg-surface: var(--raw-ink-900);
+  --bg-elevated: var(--raw-ink-800);
+  --bg-muted: var(--raw-ink-800);
+  --bg-subtle: var(--raw-ink-900);
+  --bg-scrim: rgba(0, 0, 0, 0.6);
+  --bg-inverse: var(--raw-sand-25);
+
+  --border-default: var(--raw-ink-700);
+  --border-muted: var(--raw-ink-800);
+  --border-strong: var(--raw-ink-600);
+  --border-focus: var(--raw-sand-200);
+
+  --direction-incoming: var(--raw-emerald-500);
+  --direction-incoming-bg: var(--raw-emerald-900);
+  --direction-incoming-text: var(--raw-emerald-200);
+  --direction-outgoing: var(--raw-amber-500);
+  --direction-outgoing-bg: var(--raw-amber-900);
+  --direction-outgoing-text: var(--raw-amber-200);
+
+  --intent-info: var(--raw-blue-600);
+  --intent-info-bg: rgba(43, 108, 176, 0.15);
+  --intent-info-text: var(--raw-blue-100);
+  --intent-success: var(--raw-emerald-500);
+  --intent-success-bg: rgba(46, 125, 91, 0.15);
+  --intent-success-text: var(--raw-emerald-200);
+  --intent-warn: var(--raw-amber-500);
+  --intent-warn-bg: rgba(197, 122, 31, 0.15);
+  --intent-warn-text: var(--raw-amber-200);
+  --intent-error: var(--raw-red-500);
+  --intent-error-bg: rgba(197, 52, 52, 0.15);
+  --intent-error-text: var(--raw-red-100);
+
+  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --elevation-2: 0 2px 4px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.15);
+  --elevation-3: 0 4px 8px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Typography */
+:root {
+  --font-latin: "Inter", system-ui, -apple-system, sans-serif;
+  --font-arabic: "IBM Plex Sans Arabic", "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --text-xs: 0.75rem;
+  --lh-xs: 1rem;
+  --ls-xs: 0.2px;
+  --text-sm: 0.875rem;
+  --lh-sm: 1.25rem;
+  --text-md: 1rem;
+  --lh-md: 1.5rem;
+  --text-lg: 1.25rem;
+  --lh-lg: 1.75rem;
+  --ls-lg: -0.2px;
+  --text-xl: 1.75rem;
+  --lh-xl: 2.25rem;
+  --ls-xl: -0.4px;
+  --text-display: 2.5rem;
+  --lh-display: 3rem;
+  --ls-display: -0.8px;
+
+  /* Spacing */
+  --space-0: 0;
+  --space-px: 1px;
+  --space-0-5: 2px;
+  --space-1: 4px;
+  --space-1-5: 6px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* Radius */
+  --radius-none: 0;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-pill: 9999px;
+
+  /* Motion */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-decelerate: cubic-bezier(0, 0, 0, 1);
+
+  /* Focus */
+  --focus-ring: 2px solid var(--border-focus);
+  --focus-ring-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+}

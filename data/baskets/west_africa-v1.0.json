@@ -1,0 +1,47 @@
+{
+  "basket_id": "west_africa-v1.0",
+  "region": "west_africa",
+  "basket_name": "Riz basket",
+  "effective_from": "2026-01-01",
+  "superseded_by": null,
+  "items": [
+    {
+      "commodity_code": "23161",
+      "commodity_name": "Rice, milled",
+      "faostat_item_code": 31,
+      "unit": "kg",
+      "quantity": 1.0,
+      "kcal_per_unit": 3650,
+      "weight": 0.2341
+    },
+    {
+      "commodity_code": "01520",
+      "commodity_name": "Cassava / yam",
+      "faostat_item_code": 125,
+      "unit": "kg",
+      "quantity": 1.0,
+      "kcal_per_unit": 1600,
+      "weight": 0.1026
+    },
+    {
+      "commodity_code": "21491",
+      "commodity_name": "Palm oil",
+      "faostat_item_code": 257,
+      "unit": "L",
+      "quantity": 1.0,
+      "kcal_per_unit": 8840,
+      "weight": 0.567
+    },
+    {
+      "commodity_code": "04120",
+      "commodity_name": "Dried fish",
+      "faostat_item_code": 1579,
+      "unit": "kg",
+      "quantity": 0.5,
+      "kcal_per_unit": 3000,
+      "weight": 0.0963
+    }
+  ],
+  "target_kcal": 15100,
+  "methodology_version": "1.0.0"
+}

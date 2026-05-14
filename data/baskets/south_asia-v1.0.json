@@ -1,0 +1,47 @@
+{
+  "basket_id": "south_asia-v1.0",
+  "region": "south_asia",
+  "basket_name": "Atta basket",
+  "effective_from": "2026-01-01",
+  "superseded_by": null,
+  "items": [
+    {
+      "commodity_code": "23112",
+      "commodity_name": "Atta (wheat flour)",
+      "faostat_item_code": 16,
+      "unit": "kg",
+      "quantity": 1.0,
+      "kcal_per_unit": 3640,
+      "weight": 0.1851
+    },
+    {
+      "commodity_code": "23161",
+      "commodity_name": "Rice, milled",
+      "faostat_item_code": 31,
+      "unit": "kg",
+      "quantity": 1.0,
+      "kcal_per_unit": 3650,
+      "weight": 0.1857
+    },
+    {
+      "commodity_code": "01342",
+      "commodity_name": "Lentils, dry",
+      "faostat_item_code": 186,
+      "unit": "kg",
+      "quantity": 1.0,
+      "kcal_per_unit": 3530,
+      "weight": 0.1796
+    },
+    {
+      "commodity_code": "2153",
+      "commodity_name": "Edible oil (generic)",
+      "faostat_item_code": 2571,
+      "unit": "L",
+      "quantity": 1.0,
+      "kcal_per_unit": 8840,
+      "weight": 0.4496
+    }
+  ],
+  "target_kcal": 15200,
+  "methodology_version": "1.0.0"
+}

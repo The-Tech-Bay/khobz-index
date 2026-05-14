@@ -1,0 +1,6 @@
+{
+  "success": true,
+  "source": "EUR",
+  "timestamp": 1746873600,
+  "quotes": { "USDEUR": 0.926, "EURUSD": 1.08, "USDMAD": 10.04 }
+}

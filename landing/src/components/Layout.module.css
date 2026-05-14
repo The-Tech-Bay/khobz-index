@@ -1,0 +1,129 @@
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  backdrop-filter: blur(8px);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-3) var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .nav {
+    padding: var(--space-3) var(--space-8);
+  }
+}
+
+.logo {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--fg-default);
+  text-decoration: none;
+  letter-spacing: var(--ls-lg);
+}
+.logo:hover {
+  text-decoration: none;
+}
+
+.logoK {
+  color: var(--raw-emerald-600);
+}
+
+[data-theme="dark"] .logoK {
+  color: var(--raw-emerald-400);
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.navLink,
+.activeLink {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--fg-muted);
+  text-decoration: none;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  transition: color var(--duration-fast) var(--ease-standard),
+              background var(--duration-fast) var(--ease-standard);
+}
+
+.navLink:hover {
+  color: var(--fg-default);
+  text-decoration: none;
+}
+
+.activeLink {
+  color: var(--fg-default);
+  background: var(--bg-muted);
+}
+
+.themeToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  cursor: pointer;
+  font-size: 16px;
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+.themeToggle:hover {
+  background: var(--bg-muted);
+}
+
+.main {
+  flex: 1;
+}
+
+.footer {
+  border-top: 1px solid var(--border-default);
+  padding: var(--space-6) var(--space-4);
+  background: var(--bg-subtle);
+}
+
+@media (min-width: 768px) {
+  .footer {
+    padding: var(--space-6) var(--space-8);
+  }
+}
+
+.footerInner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+@media (min-width: 768px) {
+  .footerInner {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+
+.footerText {
+  font-size: var(--text-sm);
+  color: var(--fg-muted);
+}

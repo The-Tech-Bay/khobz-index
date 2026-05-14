@@ -1,0 +1,56 @@
+{
+  "basket_id": "oecd-v1.0",
+  "region": "oecd",
+  "basket_name": "Loaf basket",
+  "effective_from": "2026-01-01",
+  "superseded_by": null,
+  "items": [
+    {
+      "commodity_code": "23413",
+      "commodity_name": "Wheat bread",
+      "faostat_item_code": 2905,
+      "unit": "kg",
+      "quantity": 1.0,
+      "kcal_per_unit": 2650,
+      "weight": 0.1565
+    },
+    {
+      "commodity_code": "02211",
+      "commodity_name": "Dairy, milk",
+      "faostat_item_code": 882,
+      "unit": "L",
+      "quantity": 1.0,
+      "kcal_per_unit": 640,
+      "weight": 0.0378
+    },
+    {
+      "commodity_code": "21531",
+      "commodity_name": "Cooking oil (sunflower)",
+      "faostat_item_code": 268,
+      "unit": "L",
+      "quantity": 1.0,
+      "kcal_per_unit": 8840,
+      "weight": 0.522
+    },
+    {
+      "commodity_code": "23511",
+      "commodity_name": "Sugar, refined",
+      "faostat_item_code": 2543,
+      "unit": "kg",
+      "quantity": 1.0,
+      "kcal_per_unit": 3870,
+      "weight": 0.2285
+    },
+    {
+      "commodity_code": "02310",
+      "commodity_name": "Eggs",
+      "faostat_item_code": 1062,
+      "unit": "ct",
+      "quantity": 12,
+      "kcal_per_unit": 78,
+      "weight": 0.0552
+    }
+  ],
+  "target_kcal": 15500,
+  "methodology_version": "1.0.0"
+}

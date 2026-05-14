@@ -1,0 +1,119 @@
+.hero {
+  padding: var(--space-10) var(--space-4) var(--space-8);
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .hero {
+    padding: var(--space-16) var(--space-8) var(--space-10);
+  }
+}
+
+.heroContent {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: var(--text-xl);
+  margin-bottom: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: var(--text-display);
+    line-height: var(--lh-display);
+    letter-spacing: var(--ls-display);
+  }
+}
+
+.accent {
+  color: var(--raw-emerald-600);
+}
+
+[data-theme="dark"] .accent {
+  color: var(--raw-emerald-400);
+}
+
+.subtitle {
+  font-size: var(--text-md);
+  line-height: var(--lh-md);
+  color: var(--fg-muted);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .subtitle {
+    font-size: var(--text-lg);
+    line-height: var(--lh-lg);
+  }
+}
+
+.mapSection {
+  padding: 0 var(--space-4) var(--space-8);
+}
+
+@media (min-width: 768px) {
+  .mapSection {
+    padding: 0 var(--space-8) var(--space-10);
+  }
+}
+
+.mapContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--elevation-2);
+}
+
+.mapHeader {
+  margin-bottom: var(--space-4);
+}
+
+.mapTitle {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+}
+
+.mapCaption {
+  font-size: var(--text-sm);
+  color: var(--fg-muted);
+}
+
+.captionAccent {
+  color: var(--fg-default);
+  font-weight: 600;
+}
+
+.sectionRegionHint {
+  font-weight: 500;
+  color: var(--fg-muted);
+  text-transform: capitalize;
+}
+
+.rankingSection {
+  padding: var(--space-8) var(--space-4) var(--space-12);
+  background: var(--bg-subtle);
+}
+
+@media (min-width: 768px) {
+  .rankingSection {
+    padding: var(--space-10) var(--space-8) var(--space-16);
+  }
+}
+
+.rankingContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.sectionTitle {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  margin-bottom: var(--space-6);
+}

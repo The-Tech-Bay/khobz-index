@@ -1,0 +1,47 @@
+{
+  "basket_id": "east_southern_africa-v1.0",
+  "region": "east_southern_africa",
+  "basket_name": "Sadza/Ugali basket",
+  "effective_from": "2026-01-01",
+  "superseded_by": null,
+  "items": [
+    {
+      "commodity_code": "23120",
+      "commodity_name": "Maize meal / flour",
+      "faostat_item_code": 58,
+      "unit": "kg",
+      "quantity": 1.0,
+      "kcal_per_unit": 3650,
+      "weight": 0.1847
+    },
+    {
+      "commodity_code": "21531",
+      "commodity_name": "Cooking oil (sunflower)",
+      "faostat_item_code": 268,
+      "unit": "L",
+      "quantity": 1.0,
+      "kcal_per_unit": 8840,
+      "weight": 0.4474
+    },
+    {
+      "commodity_code": "01310",
+      "commodity_name": "Dried beans",
+      "faostat_item_code": 176,
+      "unit": "kg",
+      "quantity": 1.0,
+      "kcal_per_unit": 3400,
+      "weight": 0.1721
+    },
+    {
+      "commodity_code": "23511",
+      "commodity_name": "Sugar, refined",
+      "faostat_item_code": 2543,
+      "unit": "kg",
+      "quantity": 1.0,
+      "kcal_per_unit": 3870,
+      "weight": 0.1958
+    }
+  ],
+  "target_kcal": 15300,
+  "methodology_version": "1.0.0"
+}

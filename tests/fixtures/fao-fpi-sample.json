@@ -1,0 +1,8 @@
+{
+  "meta": { "fixture": "fao-fpi-sdmx-like", "period": "2026-03" },
+  "data": [
+    { "series": "FPI_Cereals", "time_period": "2026-03", "value": 128.4, "unit": "index" },
+    { "series": "FPI_Oils", "time_period": "2026-03", "value": 145.2, "unit": "index" },
+    { "series": "FPI_Sugar", "time_period": "2026-03", "value": 112.8, "unit": "index" }
+  ]
+}
