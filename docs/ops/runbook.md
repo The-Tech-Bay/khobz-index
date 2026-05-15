@@ -5,8 +5,28 @@ Canonical architecture: [`../architecture/architecture.md`](../architecture/arch
 **Production URLs (MVP / free tier defaults)**  
 Replace with your account’s hostnames after `wrangler deploy` / `wrangler pages deploy`:
 
-- **API:** `https://khobz-index-api.<subdomain>.workers.dev`
+- **API:** `https://khobz-index-api.smail-elboukfaoui.workers.dev`
 - **Landing (Pages):** `https://khobz-index-landing.pages.dev` (custom domain `karama.thebay.ma/khobz` deferred — see §8)
+
+**Cloudflare Resources**
+
+| Resource | Name / ID |
+|----------|-----------|
+| Worker | `khobz-index-api` |
+| R2 Bucket | `khobz-index-snapshots` |
+| KV Namespace | `KKI_KV` (`98ddd13ae32647dd92d253c6f1144676`) |
+| KV Cache | `KKI_CACHE` (`047e5d19798441e2af794ab6d1001c02`) |
+
+**GitHub Actions Secrets** (repo: `i-bkf/karama`)
+
+| Secret | Purpose |
+|--------|---------|
+| `CLOUDFLARE_API_TOKEN` | R2 sync, KV update |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account |
+| `KKI_KV_NAMESPACE_ID` | Workers KV pipeline status |
+| `GITHUB_TOKEN` | Auto-provided for releases |
+
+**Cron Schedule**: `0 6 * * 1` — Mondays 06:00 UTC (workflow_dispatch also available)
 
 ---
 
