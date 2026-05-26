@@ -1,5 +1,3 @@
-import { getCountry } from '../data';
-
 export type MapRegionId = 'global' | 'africa' | 'mena' | 'europe' | 'asia' | 'americas';
 
 const AMERICAS_OECD_ISO2 = new Set(['US', 'CA', 'GL', 'BM']);
@@ -9,11 +7,14 @@ const OCEANIA_OECD_ISO2 = new Set(['AU', 'NZ']);
  * Matches a country to the continent-style map picker using KKI basket regions in fixture data.
  * Europe = OECD basket minus Americas / Oceania members (covers EU+EFA focus without duplicating Morocco etc.).
  */
-export function countryMatchesMapRegion(code: string, region: MapRegionId): boolean {
+export function countryMatchesMapRegion(
+  code: string,
+  region: MapRegionId,
+  basketRegion?: string,
+): boolean {
   if (region === 'global') return true;
   const cc = code.toUpperCase();
-  const c = getCountry(cc);
-  const r = c?.region;
+  const r = basketRegion;
   if (!r) return false;
 
   switch (region) {
@@ -35,12 +36,14 @@ export function countryMatchesMapRegion(code: string, region: MapRegionId): bool
 export function filterRecordsByMapRegion<T extends { code?: string }>(
   records: Record<string, T>,
   region: MapRegionId,
+  countries?: Record<string, { region: string }>,
 ): Record<string, T> {
   if (region === 'global') return records;
   const out: Record<string, T> = {};
   for (const [k, v] of Object.entries(records)) {
     const code = typeof v.code === 'string' ? v.code : k;
-    if (countryMatchesMapRegion(code, region)) {
+    const basketRegion = countries?.[code.toUpperCase()]?.region;
+    if (countryMatchesMapRegion(code, region, basketRegion)) {
       out[k] = v;
     }
   }

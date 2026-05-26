@@ -9,9 +9,12 @@
 import type {
   BasketVersion,
   CommodityPrice,
+  EstimateConfidence,
+  EstimateMethod,
   GlobalTrack,
   IndexRecord,
   QualityLevel,
+  SourcePeriodicity,
   SourceContribution,
 } from '../shared/schema.js';
 import { IndexRecordSchema } from '../shared/schema.js';
@@ -30,6 +33,12 @@ export interface CalculateKKIInput {
   methodologyVersion?: string;
   /** Source contributions for provenance tracking. */
   sourceSummary?: SourceContribution[];
+  /** Additive historical provenance. Current live pipeline records stay `observed`. */
+  estimateMethod?: EstimateMethod;
+  estimateConfidence?: EstimateConfidence;
+  sourcePeriodicity?: SourcePeriodicity;
+  baseMonth?: string | null;
+  estimateSourceIds?: string[];
 }
 
 export interface KKIResult {
@@ -112,6 +121,11 @@ export async function calculateKKI(input: CalculateKKIInput): Promise<KKIResult>
     currency,
     methodologyVersion = '1.0.0',
     sourceSummary = [],
+    estimateMethod = 'observed',
+    estimateConfidence = 'observed',
+    sourcePeriodicity = 'monthly',
+    baseMonth = null,
+    estimateSourceIds = [],
   } = input;
 
   const cc = countryCode.toUpperCase();
@@ -152,6 +166,11 @@ export async function calculateKKI(input: CalculateKKIInput): Promise<KKIResult>
     computed_at: new Date().toISOString(),
     source_summary: sourceSummary,
     quality,
+    estimate_method: estimateMethod,
+    estimate_confidence: estimateConfidence,
+    source_periodicity: sourcePeriodicity,
+    base_month: baseMonth,
+    estimate_source_ids: estimateSourceIds,
   };
 
   const record_hash = await computeRecordHash(partial);

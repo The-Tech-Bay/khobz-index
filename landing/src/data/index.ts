@@ -1,33 +1,36 @@
 import type { FixtureData } from '../types';
-import fixtureData from './fixture-snapshot.json';
 
-export const data = fixtureData as unknown as FixtureData;
+export { FixtureProvider, useFixtureData, useFixtureDataRequired } from './FixtureProvider';
 
-export function getCountryCodes(): string[] {
+export function getCountryCodes(data: FixtureData): string[] {
   return Object.keys(data.countries);
 }
 
-export function getCountry(code: string) {
+export function getCountries(data: FixtureData) {
+  return data.countries;
+}
+
+export function getCountry(data: FixtureData, code: string) {
   return data.countries[code.toUpperCase()];
 }
 
-export function getAvailableMonths(): string[] {
+export function getAvailableMonths(data: FixtureData): string[] {
   return data.months;
 }
 
-export function getLatestMonth(): string {
+export function getLatestMonth(data: FixtureData): string {
   const last = data.months[data.months.length - 1];
   if (!last) throw new Error('No months in fixture data');
   return last;
 }
 
-export function getRecordForMonth(countryCode: string, month: string) {
-  const country = getCountry(countryCode);
+export function getRecordForMonth(data: FixtureData, countryCode: string, month: string) {
+  const country = getCountry(data, countryCode);
   if (!country) return undefined;
   return country.records[month];
 }
 
-export function getAllRecordsForMonth(month: string) {
+export function getAllRecordsForMonth(data: FixtureData, month: string) {
   const result: Record<
     string,
     {

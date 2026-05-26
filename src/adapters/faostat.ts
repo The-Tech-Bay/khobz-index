@@ -9,7 +9,17 @@ import { adapterErr, FAOSTAT_ITEM_TO_CPC, fetchWithTimeout, hashRecords, mkMeta 
 
 const SOURCE_ID = 'faostat' as const;
 
+const BUNDLED_FAOSTAT_JSON = 'data/reference/faostat-pp-backfill.json';
 const AREA_MAP_PATH = resolve(import.meta.dir, '../../data/reference/faostat-area-to-iso2.json');
+
+/** Resolve FAOSTAT bulk JSON path: explicit env/opt, else bundled backfill when present. */
+export function resolveFaostatJsonPath(optsPath?: string): string | null {
+  const pathRaw = (optsPath ?? process.env.FAOSTAT_CP_JSON_PATH ?? '').trim();
+  if (pathRaw) return pathRaw;
+  const bundledAbs = resolve(process.cwd(), BUNDLED_FAOSTAT_JSON);
+  if (existsSync(bundledAbs)) return BUNDLED_FAOSTAT_JSON;
+  return null;
+}
 
 type FaostatJsonRow = {
   area_code: string;
@@ -135,7 +145,7 @@ export function createFaostatAdapter(opts: FaostatAdapterOptions = {}): SourceAd
       const timeout_ms = params.timeout_ms ?? 30_000;
       const fetchedAt = new Date().toISOString();
 
-      const pathRaw = (opts.jsonPath ?? process.env.FAOSTAT_CP_JSON_PATH ?? '').trim();
+      const pathRaw = resolveFaostatJsonPath(opts.jsonPath);
       const url = (opts.jsonUrl ?? process.env.FAOSTAT_CP_JSON_URL ?? '').trim();
 
       let j: FaostatPriceEnvelope;
@@ -184,7 +194,7 @@ export function createFaostatAdapter(opts: FaostatAdapterOptions = {}): SourceAd
             ok: false,
             error: adapterErr(SOURCE_ID, {
               code: 'NOT_FOUND',
-              message: 'Set FAOSTAT_CP_JSON_URL or FAOSTAT_CP_JSON_PATH (or pass opts)',
+              message: `Set FAOSTAT_CP_JSON_URL or FAOSTAT_CP_JSON_PATH, or run pipeline:prefetch to create ${BUNDLED_FAOSTAT_JSON}`,
               retryable: false,
             }),
           };

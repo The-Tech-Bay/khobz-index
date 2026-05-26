@@ -6,10 +6,12 @@ import {
   ZoomableGroup,
 } from "react-simple-maps";
 import type { ScaleSequential } from "d3-scale";
+import countries110m from "world-atlas/countries-110m.json";
 
 import type { MapProjectionConfig } from "./RegionPicker";
+import { isMoroccoTerritoryAlpha2, normalizeMapAlpha2 } from "../lib/moroccoMapNormalization";
 
-const GEO_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
+const GEO_DATA = countries110m;
 
 const DEFAULT_PROJECTION: MapProjectionConfig = {
   scale: 147,
@@ -18,6 +20,7 @@ const DEFAULT_PROJECTION: MapProjectionConfig = {
 
 const NO_DATA_COLOR_LIGHT = "#EBE3D6";
 const NO_DATA_COLOR_DARK = "#2C3038";
+const HOVER_FILL = "#DDD0BD";
 
 interface MapRecord {
   code: string;
@@ -33,6 +36,7 @@ interface Props {
   colorScale: ScaleSequential<string> | (() => string);
   projectionConfig?: MapProjectionConfig | undefined;
   selectedAlpha2?: string | null | undefined;
+  hoveredAlpha2?: string | null | undefined;
   onHover: (code: string, event: React.MouseEvent) => void;
   onLeave: () => void;
   onCountryClick: (code: string) => void;
@@ -68,13 +72,14 @@ const ISO_NUMERIC_TO_ALPHA2: Record<string, string> = {
   "800": "UG", "804": "UA", "826": "GB", "834": "TZ", "840": "US",
   "854": "BF", "858": "UY", "860": "UZ", "862": "VE", "894": "ZM",
   "887": "YE",
+  "732": "MA",
 };
 
 function getAlpha2(geo: { id?: string; properties?: { ISO_A2?: string } }): string | undefined {
   if (geo.properties?.ISO_A2 && geo.properties.ISO_A2 !== "-99") {
-    return geo.properties.ISO_A2;
+    return normalizeMapAlpha2(geo.properties.ISO_A2);
   }
-  if (geo.id) return ISO_NUMERIC_TO_ALPHA2[geo.id];
+  if (geo.id) return normalizeMapAlpha2(ISO_NUMERIC_TO_ALPHA2[geo.id] ?? geo.id);
   return undefined;
 }
 
@@ -83,6 +88,7 @@ function MapChart({
   colorScale,
   projectionConfig = DEFAULT_PROJECTION,
   selectedAlpha2,
+  hoveredAlpha2,
   onHover,
   onLeave,
   onCountryClick,
@@ -93,6 +99,7 @@ function MapChart({
     document.documentElement.getAttribute("data-theme") === "dark";
   const noDataColor = isDark ? NO_DATA_COLOR_DARK : NO_DATA_COLOR_LIGHT;
   const selectedUpper = selectedAlpha2?.toUpperCase() ?? null;
+  const hoveredUpper = hoveredAlpha2?.toUpperCase() ?? null;
 
   const mergedProjection = useMemo(
     () => ({
@@ -122,17 +129,26 @@ function MapChart({
         />
       ) : null}
       <ZoomableGroup>
-        <Geographies geography={GEO_URL}>
+        <Geographies geography={GEO_DATA}>
           {({ geographies }) =>
             geographies.map((geo) => {
               const alpha2 = getAlpha2(geo);
               const record = alpha2 ? records[alpha2] : undefined;
               const seq = colorScale as ScaleSequential<string>;
+              const isMoroccoTerritory = isMoroccoTerritoryAlpha2(alpha2);
+
+              const isHovered =
+                alpha2 !== undefined &&
+                hoveredUpper !== null &&
+                alpha2.toUpperCase() === hoveredUpper &&
+                Boolean(record);
 
               const fill =
-                record !== undefined
-                  ? seq(record.kki_value_usd)
-                  : noDataColor;
+                isHovered
+                  ? HOVER_FILL
+                  : record !== undefined
+                    ? seq(record.kki_value_usd)
+                    : noDataColor;
 
               const isSelected =
                 alpha2 !== undefined &&
@@ -146,12 +162,14 @@ function MapChart({
                   geography={geo}
                   fill={fill}
                   stroke={
-                    isSelected
+                    isMoroccoTerritory
+                      ? fill
+                      : isSelected
                       ? (isDark ? "#56AB87" : "#2E7D5B")
                       : (isDark ? "#1E2228" : "#FCFAF6")
                   }
                   strokeWidth={
-                    isSelected ? 1.75 : 0.5
+                    isMoroccoTerritory ? 0.5 : isSelected ? 1.75 : 0.5
                   }
                   tabIndex={record ? 0 : -1}
                   role={record ? "button" : undefined}
@@ -173,10 +191,7 @@ function MapChart({
                     default: { outline: "none", cursor: record !== undefined ? "pointer" : "default" },
                     hover: {
                       outline: "none",
-                      fill:
-                        record !== undefined
-                          ? "#DDD0BD"
-                          : noDataColor,
+                      fill: record !== undefined ? HOVER_FILL : noDataColor,
                       cursor: record !== undefined ? "pointer" : "default",
                     },
                     pressed: { outline: "none" },

@@ -3,13 +3,13 @@
  * prefetch global cereals / Brent / gold once, then each month FX + FAOSTAT + `calculateKKI`.
  *
  * Writes rollups under `build/`, R2 mirror, pipeline summary KV-shaped JSON,
- * and `landing/src/data/fixture-snapshot.json` (last 6 processed months).
+ * and `landing/src/data/fixture-snapshot.json` (full resolved history by default).
  */
 
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createFrankfurterAdapter } from '../adapters/frankfurter.js';
+import { loadHistoricalCpiEnvelopeFromEnv } from '../adapters/historical-cpi.js';
 import { createDefaultOrchestrator, type SlotResult } from '../adapters/orchestrator.js';
 import { getBasketForCountry } from '../engine/basket.js';
 import { computeGlobalBasketCost } from '../engine/global-track.js';
@@ -17,7 +17,6 @@ import { getCurrency } from '../engine/hybrid.js';
 import { calculateKKI } from '../engine/index.js';
 import { COUNTRY_TO_REGION } from '../shared/countries.js';
 import type {
-  AdapterResult,
   FetchParams,
   GlobalTrack,
   IndexRecord,
@@ -34,7 +33,9 @@ import {
 import { loadMonthlyBenchmarkCsv } from './lib/benchmark-csv.js';
 import { priceRecordsToBasketCommodityPrices, tierForSourceId } from './lib/commodity-prices.js';
 import { buildLandingFixtureData, type CountryMonthlyPipelineRow } from './lib/fixture-builder.js';
-import { lcuPerUsdFromFrankfurterRecords } from './lib/fx-utils.js';
+import { writeLandingFixtureShards } from './lib/fixture-shards.js';
+import { backfillHistoricalRecords, hasLocalKkiData, historicalTargetMonths } from './lib/historical-backfill.js';
+import { lcuPerUsdFromFxRecords } from './lib/fx-utils.js';
 import { assembleGlobalTrackForMonth } from './lib/global-track-assemble.js';
 import {
   defaultPreviousUtcMonth,
@@ -45,6 +46,7 @@ import {
 const METHODOLOGY_VERSION = '1.0.0';
 const SCHEMA_VERSION = '1.0.0';
 const SCHEMA_MARKETING = '1.0';
+const DEFAULT_HISTORICAL_FROM = '1990-01';
 
 function isoWeekId(d: Date): string {
   const target = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
@@ -58,16 +60,6 @@ function isoWeekId(d: Date): string {
   const week = 1 + Math.ceil((firstThursday - target.getTime()) / (7 * 24 * 3600 * 1000));
   const y = target.getUTCFullYear();
   return `${y}-W${String(week).padStart(2, '0')}`;
-}
-
-function adapterResultSummary(result: AdapterResult): Record<string, unknown> {
-  if (!result.ok) {
-    return { ok: false, error: result.error };
-  }
-  const base = { ok: true as const, changed: result.changed, metadata: result.metadata };
-  return result.changed
-    ? { ...base, record_count: result.records.length }
-    : { ...base, state: result.state };
 }
 
 async function exportInMemoryToDir(
@@ -120,6 +112,7 @@ interface PipelineCli {
   readonly skipPersist: boolean;
   readonly maxCountries?: number;
   readonly frankfurterDelayMs: number;
+  readonly force: boolean;
 }
 
 function readMaxCountriesEnv(): number | undefined {
@@ -136,8 +129,21 @@ function readFrankDelay(): number {
   return 500;
 }
 
+function readHistoricalFrom(): string {
+  const raw = (process.env.PIPELINE_HISTORICAL_FROM ?? '').trim().slice(0, 7);
+  if (/^\d{4}-\d{2}$/.test(raw)) return raw;
+  return DEFAULT_HISTORICAL_FROM;
+}
+
+function readFixtureMonthsLimit(): number | null {
+  const raw = Number(process.env.PIPELINE_FIXTURE_MONTHS_LIMIT ?? '');
+  if (Number.isFinite(raw) && raw > 0) return Math.floor(raw);
+  return null;
+}
+
 function parseArgv(argv: string[]): PipelineCli {
   const skipPersist = argv.includes('--dry-run');
+  const force = argv.includes('--force');
   let fromYm = '';
   let toYm = '';
   let explicitMonth = '';
@@ -159,6 +165,7 @@ function parseArgv(argv: string[]): PipelineCli {
       skipPersist,
       maxCountries: readMaxCountriesEnv(),
       frankfurterDelayMs: readFrankDelay(),
+      force,
     };
   }
 
@@ -172,10 +179,11 @@ function parseArgv(argv: string[]): PipelineCli {
       skipPersist,
       maxCountries: readMaxCountriesEnv(),
       frankfurterDelayMs: readFrankDelay(),
+      force,
     };
   }
 
-  if (!fromResolved) fromResolved = '2020-01';
+  if (!fromResolved) fromResolved = readHistoricalFrom();
   if (!toResolved) toResolved = defaultPreviousUtcMonth();
 
   let months = expandInclusiveMonths(fromResolved.slice(0, 7), toResolved.slice(0, 7));
@@ -188,6 +196,7 @@ function parseArgv(argv: string[]): PipelineCli {
     skipPersist,
     maxCountries: readMaxCountriesEnv(),
     frankfurterDelayMs: readFrankDelay(),
+    force,
   };
 }
 
@@ -225,7 +234,6 @@ async function main(): Promise<void> {
   const prefetchParams: FetchParams = { target_date: anchorDate, wb_date_range: wbRange };
 
   const orch = createDefaultOrchestrator();
-  const frank = createFrankfurterAdapter();
 
   // biome-ignore lint/suspicious/noConsole: breadcrumbs
   console.info(
@@ -255,22 +263,21 @@ async function main(): Promise<void> {
   const fetchIsoAnchor = new Date().toISOString();
 
   let lastLocalSlot: SlotResult | null = null;
-  /** Last fx fetch for KV summary */
-  let lastFxResult: AdapterResult | null = null;
+  /** Last fx slot fetch for KV summary */
+  let lastFxSlot: SlotResult | null = null;
 
   for (let mi = 0; mi < months.length; mi++) {
     const month = months[mi];
     if (month === undefined) continue;
     if (mi > 0) await sleep(cli.frankfurterDelayMs);
 
-    lastFxResult = await frank.fetch({ target_date: `${month}-15` });
-    if (!lastFxResult.ok) {
+    lastFxSlot = await orch.fetchSlot({ target_date: `${month}-15` }, 'fx_display');
+    if (!lastFxSlot.ok) {
       // biome-ignore lint/suspicious/noConsole: CLI
-      console.error('[pipeline] Frankfurter failed', lastFxResult.error);
+      console.error('[pipeline] FX slot failed (Frankfurter + exchangerate.host)', lastFxSlot.errors);
       process.exit(1);
     }
-    const fxRows = lastFxResult.changed ? lastFxResult.records : lastFxResult.state.records;
-    const fullFxMap = lcuPerUsdFromFrankfurterRecords(fxRows);
+    const fullFxMap = lcuPerUsdFromFxRecords(lastFxSlot.records);
 
     const lcuPerCountry: Record<string, number> = {};
     for (const cc of countryList) {
@@ -443,6 +450,123 @@ async function main(): Promise<void> {
     writeFileSync(resolve(outDir, `khobz-index-${month}.csv`), `${csvHead}${csvBody}\n`, 'utf8');
   }
 
+  const latestPipelineMonth = months[months.length - 1];
+  if (latestPipelineMonth) {
+    let globalOnlyCount = 0;
+    const degenerateUsdCounts = new Map<string, number>();
+    for (const cc of countryList) {
+      const row = fixtureRows.get(cc.toUpperCase())?.get(latestPipelineMonth);
+      if (row?.record.quality === 'global_only') {
+        globalOnlyCount += 1;
+        if (row.record.local_basket_cost === 0 && Number.isFinite(row.record.kki_value_usd)) {
+          const key = row.record.kki_value_usd.toFixed(3);
+          degenerateUsdCounts.set(key, (degenerateUsdCounts.get(key) ?? 0) + 1);
+        }
+      }
+    }
+    const globalOnlyPct = globalOnlyCount / Math.max(countryList.length, 1);
+    const dominantDegenerateCount = Math.max(0, ...degenerateUsdCounts.values());
+    const dominantDegeneratePct = dominantDegenerateCount / Math.max(countryList.length, 1);
+    if (dominantDegeneratePct > 0.95 && !cli.force) {
+      // biome-ignore lint/suspicious/noConsole: fatal
+      console.error(
+        `[pipeline] FATAL: ${(dominantDegeneratePct * 100).toFixed(0)}% of countries share one global-only USD value for ${latestPipelineMonth} (${dominantDegenerateCount}/${countryList.length}). ` +
+          'Local FAOSTAT prices missing — run `bun run pipeline:prefetch` or set FAOSTAT_CP_JSON_PATH. Pass --force to override.',
+      );
+      process.exit(1);
+    }
+    if (globalOnlyPct > 0.8) {
+      // biome-ignore lint/suspicious/noConsole: CLI
+      console.warn(
+        `[pipeline] WARN: ${(globalOnlyPct * 100).toFixed(0)}% global_only for ${latestPipelineMonth}; continuing because local-price countries still have differentiated KKI values`,
+      );
+    }
+  }
+
+  const nowIso = new Date().toISOString();
+  const cpiEnvelope = loadHistoricalCpiEnvelopeFromEnv();
+  const historicalFrom = readHistoricalFrom();
+  const historicalMonths = historicalTargetMonths(historicalFrom, toYm);
+  let totalChained = 0;
+  let totalReplaced = 0;
+
+  if (cpiEnvelope && historicalMonths.length > 0) {
+    for (const cc of countryList) {
+      const ccU = cc.toUpperCase();
+      const observedMap = fixtureRows.get(ccU) ?? new Map<string, CountryMonthlyPipelineRow>();
+      const backfill = await backfillHistoricalRecords({
+        countryCode: ccU,
+        observedByMonth: new Map(
+          [...observedMap.entries()].map(([m, row]) => [m, row.record]),
+        ),
+        targetMonths: historicalMonths,
+        cpiEnvelope,
+        computedAt: nowIso,
+      });
+      totalChained += backfill.chainedCount;
+      totalReplaced += backfill.replacedCount;
+
+      for (const rec of backfill.records) {
+        const prior = observedMap.get(rec.month)?.record;
+        if (prior && hasLocalKkiData(prior)) continue;
+        if (
+          prior &&
+          prior.estimate_method === rec.estimate_method &&
+          prior.kki_value === rec.kki_value &&
+          prior.base_month === rec.base_month
+        ) {
+          continue;
+        }
+
+        const priorRow = observedMap.get(rec.month);
+        const minimalRow: CountryMonthlyPipelineRow = {
+          record: rec,
+          commodityPrices: priorRow?.commodityPrices ?? [],
+          schemaGlobalTrack: priorRow?.schemaGlobalTrack ?? ({} as GlobalTrack),
+          staleGold: priorRow?.staleGold ?? false,
+          staleEnergy: priorRow?.staleEnergy ?? false,
+        };
+        observedMap.set(rec.month, minimalRow);
+        fixtureRows.set(ccU, observedMap);
+
+        let arr = byCountryMonths[ccU];
+        if (!arr) {
+          arr = [];
+          byCountryMonths[ccU] = arr;
+        }
+        const idx = arr.findIndex((r) => r.month === rec.month);
+        if (idx >= 0) arr[idx] = rec;
+        else arr.push(rec);
+
+        if (!cli.skipPersist && !prior) {
+          const countrySnapshot = await buildCountrySnapshotMinimal({
+            country_code: ccU,
+            snapshot_date: `${rec.month}-15`,
+            basket_version: rec.basket_version,
+            global_track: {} as GlobalTrack,
+            fetch_timestamp_iso: nowIso,
+            prices: [],
+            quality_flags: {
+              stale_gold: false,
+              global_only: rec.quality === 'global_only',
+              missing_sources: ['historical_cpi_backfill'],
+            },
+          });
+          const pr = await persistCountryMonth(r2Smoke, 'v1.0', rec.month, rec, countrySnapshot);
+          if (!pr.ok) {
+            // biome-ignore lint/suspicious/noConsole: fatal
+            console.error('[pipeline] historical persist failed', ccU, rec.month, pr);
+            process.exit(1);
+          }
+        }
+      }
+    }
+    // biome-ignore lint/suspicious/noConsole: breadcrumbs
+    console.info(
+      `[pipeline] historical CPI backfill — ${totalChained} new + ${totalReplaced} replaced (${historicalFrom} → ${toYm})`,
+    );
+  }
+
   if (!cli.skipPersist) {
     const bundleOut = buildOfflineApkBundle({
       methodology_version: METHODOLOGY_VERSION,
@@ -456,7 +580,7 @@ async function main(): Promise<void> {
   const { keys: r2Keys } = await exportInMemoryToDir(r2Smoke, r2MirrorDir);
   writeFileSync(join(outDir, 'r2-keys.txt'), `${r2Keys.join('\n')}\n`, 'utf8');
 
-  const nowIso = new Date().toISOString();
+  const nowIsoFinal = new Date().toISOString();
   const weekId = isoWeekId(new Date());
   const sourcesHealth: Record<string, 'up' | 'degraded' | 'unavailable'> = {
     'fao-fpi': cerealsRecs.length > 0 ? 'up' : 'degraded',
@@ -465,20 +589,24 @@ async function main(): Promise<void> {
     'wb-pink-sheet': crudeRecs.length > 0 ? 'up' : 'degraded',
     'goldprice-dev': goldRecs.length > 0 ? 'up' : 'degraded',
     'metals-dev': 'up',
-    frankfurter: lastFxResult?.ok ? 'up' : 'unavailable',
+    frankfurter: lastFxSlot?.ok && lastFxSlot.source_id === 'frankfurter' ? 'up' : 'degraded',
+    'exchangerate-host':
+      lastFxSlot?.ok && lastFxSlot.source_id === 'exchangerate-host' ? 'up' : 'unavailable',
   };
   const degradedCount = Object.values(sourcesHealth).filter((s) => s !== 'up').length;
   const pipelineSummary = {
     schema_version: SCHEMA_VERSION,
-    generated_at: nowIso,
+    generated_at: nowIsoFinal,
     months_processed: months,
+    historical_from: historicalFrom,
+    historical_chained_count: totalChained,
     week_id: weekId,
     slots: {
       prefetch_global_cereals: summarizeSlot(slotCereals),
       prefetch_crude: summarizeSlot(slotCrude),
       prefetch_gold: summarizeSlot(slotGold),
       last_local_month: lastLocalSlot ? summarizeSlot(lastLocalSlot) : null,
-      frankfurter_last_month: lastFxResult ? adapterResultSummary(lastFxResult) : { ok: false },
+      last_fx_month: lastFxSlot ? summarizeSlot(lastFxSlot) : null,
     },
     countries: countryList,
     sources: sourcesHealth,
@@ -492,7 +620,7 @@ async function main(): Promise<void> {
   );
 
   const pipelineKv = {
-    last_successful_run_at: nowIso,
+    last_successful_run_at: nowIsoFinal,
     last_run_week_id: weekId,
     sources: sourcesHealth,
   };
@@ -512,11 +640,16 @@ async function main(): Promise<void> {
     'utf8',
   );
 
-  const fixtureWindow = months.slice(Math.max(0, months.length - 6));
+  const fixtureLimit = readFixtureMonthsLimit();
+  const allFixtureMonths = historicalMonths.length > 0 ? historicalMonths : months;
+  const fixtureWindow =
+    fixtureLimit != null
+      ? allFixtureMonths.slice(Math.max(0, allFixtureMonths.length - fixtureLimit))
+      : allFixtureMonths;
   const fixturePayload = buildLandingFixtureData({
     schema_version: SCHEMA_MARKETING,
     methodology_version: METHODOLOGY_VERSION,
-    generated_at: nowIso,
+    generated_at: nowIsoFinal,
     fixtureMonths: fixtureWindow,
     byCountryMonth: fixtureRows,
   });
@@ -525,10 +658,14 @@ async function main(): Promise<void> {
     `${JSON.stringify(fixturePayload, null, 2)}\n`,
     'utf8',
   );
+  const { shardCount } = writeLandingFixtureShards(
+    fixturePayload,
+    resolve(khobzRoot, 'landing/public/data/fixture'),
+  );
 
   // biome-ignore lint/suspicious/noConsole: breadcrumbs
   console.info(
-    `[pipeline] OK — persisted ${months.length} month rollups (${countryList.length} countries/view); APK ${cli.skipPersist ? 'skipped' : 'bundled'}; fixture last ${fixtureWindow.length} months → landing/src/data/fixture-snapshot.json`,
+    `[pipeline] OK — persisted ${months.length} month rollups (${countryList.length} countries/view); historical CPI ${totalChained} new + ${totalReplaced} replaced; APK ${cli.skipPersist ? 'skipped' : 'bundled'}; fixture ${fixtureWindow.length} months → landing/src/data/fixture-snapshot.json (+ ${shardCount} Pages shard(s))`,
   );
 }
 

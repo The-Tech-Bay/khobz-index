@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Environment and secrets — NEVER commit
+.env
+.env.*
+!.env.example
+docs/architecture/credentials/
+
+# Build output
+dist/
+build/
+.wrangler/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Data output (committed via pipeline, not manually)
+# data/ is intentionally tracked — pipeline commits snapshots

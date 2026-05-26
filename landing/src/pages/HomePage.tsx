@@ -6,12 +6,14 @@ import {
   getAllRecordsForMonth,
   formatMonth,
 } from "../data";
+import { useFixtureDataRequired } from "../data/FixtureProvider";
 import { RegionPicker, projectionForRegion } from "../components/RegionPicker";
 import type { MapRegionId } from "../lib/mapRegionFilter";
 import { filterRecordsByMapRegion } from "../lib/mapRegionFilter";
 import { WorldMap } from "../components/WorldMap";
 import { TimeSlider } from "../components/TimeSlider";
 import { CountryRanking } from "../components/CountryRanking";
+import { SalaryCalculator } from "../components/SalaryCalculator";
 import { useTouchDevice } from "../hooks/useTouchDevice";
 import styles from "./HomePage.module.css";
 
@@ -24,16 +26,17 @@ const MAP_REGION_HEADING_SUFFIX: Record<Exclude<MapRegionId, "global">, string> 
 };
 
 export function HomePage() {
-  const months = getAvailableMonths();
-  const [selectedMonth, setSelectedMonth] = useState(getLatestMonth());
+  const fixture = useFixtureDataRequired();
+  const months = getAvailableMonths(fixture);
+  const [selectedMonth, setSelectedMonth] = useState(getLatestMonth(fixture));
   const [mapRegion, setMapRegion] = useState<MapRegionId>("global");
-  const records = getAllRecordsForMonth(selectedMonth);
+  const records = getAllRecordsForMonth(fixture, selectedMonth);
   const projectionConfig = projectionForRegion(mapRegion);
   const isTouchDevice = useTouchDevice();
 
   const rankingRecords = useMemo(
-    () => filterRecordsByMapRegion(records, mapRegion),
-    [records, mapRegion],
+    () => filterRecordsByMapRegion(records, mapRegion, fixture.countries),
+    [records, mapRegion, fixture.countries],
   );
 
   return (
@@ -55,6 +58,8 @@ export function HomePage() {
           </p>
         </div>
       </section>
+
+      <SalaryCalculator />
 
       <section className={styles.mapSection} aria-label="Interactive world map">
         <div className={styles.mapContainer}>

@@ -236,6 +236,31 @@ export const QualityLevelSchema = z.enum(['full', 'degraded', 'global_only']);
 
 export type QualityLevel = z.infer<typeof QualityLevelSchema>;
 
+export const EstimateMethodSchema = z.enum([
+  'observed',
+  'cpi_chained',
+  'headline_cpi_chained',
+  'global_only_historical',
+]);
+
+export type EstimateMethod = z.infer<typeof EstimateMethodSchema>;
+
+export const EstimateConfidenceSchema = z.enum(['observed', 'high', 'medium', 'low']);
+
+export type EstimateConfidence = z.infer<typeof EstimateConfidenceSchema>;
+
+export const SourcePeriodicitySchema = z.enum([
+  'realtime',
+  'daily',
+  'weekly',
+  'monthly',
+  'annual',
+  'interpolated',
+  'unknown',
+]);
+
+export type SourcePeriodicity = z.infer<typeof SourcePeriodicitySchema>;
+
 export const IndexRecordSchema = z.object({
   country_code: z.string().length(2),
   month: z.string().regex(/^\d{4}-\d{2}$/),
@@ -250,6 +275,15 @@ export const IndexRecordSchema = z.object({
   computed_at: z.string().datetime(),
   source_summary: z.array(SourceContributionSchema),
   quality: QualityLevelSchema,
+  estimate_method: EstimateMethodSchema.default('observed'),
+  estimate_confidence: EstimateConfidenceSchema.default('observed'),
+  source_periodicity: SourcePeriodicitySchema.default('monthly'),
+  base_month: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/)
+    .nullable()
+    .default(null),
+  estimate_source_ids: z.array(z.string().min(1)).default([]),
   record_hash: z.string().regex(/^[a-f0-9]{64}$/),
 });
 

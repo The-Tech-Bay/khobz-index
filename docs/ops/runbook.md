@@ -109,11 +109,17 @@ Worker **rate limits and `/auth/*` Origin rules** are enforced in **Hono middlew
 
 ### 1.6 Deploy landing (Pages)
 
+The landing app loads historical KKI data from **`landing/public/data/fixture/`** (manifest + shards under 25 MiB each). Regenerate after pipeline backfill:
+
 ```bash
 cd khobz-index
+bun run pipeline:rebuild-fixture
+bun run pages:shard    # optional if pipeline already wrote shards
 bun run pages:build
 bun run pages:deploy
 ```
+
+`pipeline:rebuild-fixture` merges all `build/khobz-index-YYYY-MM.json` rollups, applies the CPI replacement pass for pre-local `global_only` months, enriches the latest month with FAOSTAT basket line items, and writes both `landing/src/data/fixture-snapshot.json` and sharded public fixture files.
 
 ---
 
@@ -157,10 +163,13 @@ gh workflow run kki-weekly.yml --ref main
 
 If Cloudflare secrets are **unset**, the workflow still runs the **pipeline + Release**; R2/KV sync steps print a skip message.
 
-### 3.1b Local pipeline inputs (FAO FPI + FAOSTAT)
+### 3.1b Local pipeline inputs (FAO FPI + FAOSTAT + CPI)
 
+- **Full historical backfill:** `cd khobz-index && bun run pipeline:backfill` (prefetch FAOSTAT + World Bank CPI, then `--backfill --from=1990-01`). Do **not** call `src/pipeline/run.ts` directly without prefetch.
 - **Global FPI fallback:** When `FAO_FPI_JSON_URL` / `FAO_FPI_CSV_URL` are empty, the cereals/oils/sugar sub-indices are filled from [`data/reference/monthly-global-benchmarks.csv`](../../data/reference/monthly-global-benchmarks.csv) (columns `fao_fpi_*`) so the global composite varies month-to-month. See root [`docs/kki/kki-data-quality.md`](../../../docs/kki/kki-data-quality.md).
-- **Local prices (FAOSTAT CP):** Configure **`FAOSTAT_CP_JSON_URL`** (HTTP bulk) and/or **`FAOSTAT_CP_JSON_PATH`** (bundled JSON `{ "data": [...] }` on disk — path relative to `process.cwd()`, i.e. run from `khobz-index/`). Without either, the FAOSTAT/WFP slot fails and countries stay `global_only`.
+- **Local prices (FAOSTAT CP):** Set **`FAOSTAT_CP_JSON_PATH=data/reference/faostat-pp-backfill.json`** (from `pipeline:prefetch`) or rely on bundled auto-detect. Countries without FAOSTAT data remain `global_only`; the pipeline only exits fatally when nearly all countries collapse to the same global-only USD value, which indicates a missing local-price input rather than normal coverage gaps.
+- **Historical CPI:** Set **`HISTORICAL_CPI_JSON_PATH=data/reference/historical-cpi-envelope.json`** (from `pipeline:prefetch-cpi`). Replaces pre-local `global_only` months with CPI-chained estimates. If the latest KKI month is newer than the CPI envelope, the backfill anchors to the latest local month with CPI coverage instead of no-oping.
+- **FX (monthly loop):** The pipeline uses the **`fx_display` slot** (`Frankfurter` → `exchangerate.host`, with adapter retries) instead of calling Frankfurter directly. Transient Frankfurter **HTTP 520** errors should fall through after retries; set **`EXCHANGERATE_HOST_URL`** or **`EXCHANGERATE_HOST_API_KEY`** for the backup. Throttle with **`PIPELINE_FRANKFURTER_DELAY_MS`** (default 500 ms between months on backfill).
 
 ### 3.2 `GlobalTrackMismatch` during `--backfill`
 

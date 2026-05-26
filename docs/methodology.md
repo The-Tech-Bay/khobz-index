@@ -121,6 +121,38 @@ calculations. This is the same integrity discipline as versioned API contracts.
 
 ---
 
+## 6A. Historical Estimates
+
+Older dates may predate direct KKI basket observations. For those periods, the public site can display CPI-chain estimates with explicit provenance:
+
+```
+KKI(C,t) = KKI(C,t0) × CPI(C,t) / CPI(C,t0)
+```
+
+Food CPI is preferred because KKI measures staple-food purchasing power. Headline CPI is used only as a fallback. Historical estimates carry:
+
+- `estimate_method` — observed, food CPI chained, headline CPI chained, or global-only historical
+- `estimate_confidence` — observed, high, medium, or low
+- `source_periodicity` — monthly, annual, interpolated, or source-native cadence
+- `base_month` — the observed KKI month used as the chain-link baseline
+
+Public calculators and charts must show these labels so old-money comparisons are useful without overstating precision.
+
+### Historical chart eras and splice diagnostics
+
+Historical KKI charts separate **observed item-price records** from **CPI-chained estimates**:
+
+- **Observed records** use the live KKI basket pipeline for that month.
+- **Food CPI chained records** estimate the local basket leg from a real observed base month using a food-price index.
+- **Headline CPI chained records** are a lower-confidence fallback because headline CPI includes housing, services, energy, and other non-food components.
+- **Annual CPI records** are annual-grain estimates. When shown on a monthly chart, they should appear as stepped annual segments and must not be interpreted as monthly observations.
+
+The observed boundary can create a visible **splice gap** between the last CPI estimate and the first observed basket month. That gap is a methodology diagnostic: it may reflect source coverage, proxy-deflator mismatch, producer-vs-retail price differences, or basket composition differences. It should not be presented as a real one-month inflation shock.
+
+For v1.0 historical backcasts, the local basket component is chain-linked with CPI while the historical global basket leg is preserved where the archive already has a global track for the target month. This keeps the hybrid formula closer to its macroeconomic meaning than scaling the entire KKI by a single headline CPI ratio.
+
+---
+
 ## 7. Soundness
 
 ### Within-Market

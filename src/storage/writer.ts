@@ -19,7 +19,7 @@ export interface CountryMonthEnvelopeJson {
 }
 
 export const CSV_HEADER =
-  'country_code,month,kki_value,kki_value_usd,currency,alpha,local_basket_cost,global_basket_cost,basket_version,methodology_version,computed_at,quality,fao_fpi_cereals,fao_fpi_oils,fao_fpi_sugar,brent_crude_usd,gold_xau_usd,record_hash\n';
+  'country_code,month,kki_value,kki_value_usd,currency,alpha,local_basket_cost,global_basket_cost,basket_version,methodology_version,computed_at,quality,estimate_method,estimate_confidence,source_periodicity,base_month,estimate_source_ids,fao_fpi_cereals,fao_fpi_oils,fao_fpi_sugar,brent_crude_usd,gold_xau_usd,record_hash\n';
 
 /** Serialize one CSV row matching data-schema.md §5.4. */
 export function serializeIndexCsvRow(record: IndexRecord, globalTrack: GlobalTrack): string {
@@ -36,6 +36,11 @@ export function serializeIndexCsvRow(record: IndexRecord, globalTrack: GlobalTra
     record.methodology_version,
     record.computed_at,
     record.quality,
+    record.estimate_method,
+    record.estimate_confidence,
+    record.source_periodicity,
+    record.base_month ?? '',
+    record.estimate_source_ids.join('|'),
     csvNumNullable(globalTrack.fao_fpi_cereals),
     csvNumNullable(globalTrack.fao_fpi_oils),
     csvNumNullable(globalTrack.fao_fpi_sugar),

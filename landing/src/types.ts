@@ -4,6 +4,11 @@ export interface CountryRecord {
   local_basket_cost: number;
   global_basket_cost: number;
   quality: 'full' | 'degraded' | 'global_only';
+  estimate_method?: string;
+  estimate_confidence?: string;
+  source_periodicity?: string;
+  base_month?: string | null;
+  estimate_source_ids?: string[];
 }
 
 export interface CommodityPrice {
@@ -39,6 +44,14 @@ export interface CountrySnapshot {
   quality_flags: QualityFlags;
 }
 
+export interface CountryDiagnostics {
+  first_observed_month: string | null;
+  last_estimated_month_before_observed: string | null;
+  splice_gap_pct: number | null;
+  dominant_estimate_method: string | null;
+  has_annual_cpi_history: boolean;
+}
+
 export interface CountryData {
   name: string;
   currency: string;
@@ -46,6 +59,7 @@ export interface CountryData {
   basket_version: string;
   alpha: number;
   market_type: string;
+  diagnostics?: CountryDiagnostics;
   records: Record<string, CountryRecord>;
   latest_snapshot: CountrySnapshot;
 }

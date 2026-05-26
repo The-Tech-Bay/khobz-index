@@ -22,6 +22,11 @@ export interface LandingFixtureCountryRecord {
   local_basket_cost: number;
   global_basket_cost: number;
   quality: 'full' | 'degraded' | 'global_only';
+  estimate_method: string;
+  estimate_confidence: string;
+  source_periodicity: string;
+  base_month: string | null;
+  estimate_source_ids: string[];
 }
 
 export interface LandingFixtureCommodityPrice {
@@ -57,6 +62,7 @@ export interface LandingFixtureCountryData {
   basket_version: string;
   alpha: number;
   market_type: string;
+  diagnostics: LandingFixtureCountryDiagnostics;
   records: Record<string, LandingFixtureCountryRecord>;
   latest_snapshot: {
     snapshot_date: string;
@@ -64,6 +70,14 @@ export interface LandingFixtureCountryData {
     global_track: LandingFixtureGlobalTrackMini;
     quality_flags: LandingFixtureQualityFlags;
   };
+}
+
+export interface LandingFixtureCountryDiagnostics {
+  first_observed_month: string | null;
+  last_estimated_month_before_observed: string | null;
+  splice_gap_pct: number | null;
+  dominant_estimate_method: string | null;
+  has_annual_cpi_history: boolean;
 }
 
 export interface LandingFixturePayload {
@@ -96,6 +110,67 @@ export function countryDisplayName(code: string): string {
 
 function slugRegion(r: Region | undefined): string {
   return r ?? 'unknown';
+}
+
+function isObservedLocal(record: IndexRecord): boolean {
+  return record.estimate_method === 'observed' && record.local_basket_cost > 0;
+}
+
+function isEstimated(record: IndexRecord): boolean {
+  return record.estimate_method !== 'observed';
+}
+
+export function buildCountryDiagnostics(
+  recordsByMonth: ReadonlyMap<string, CountryMonthlyPipelineRow>,
+): LandingFixtureCountryDiagnostics {
+  const months = [...recordsByMonth.keys()].sort();
+  const firstObservedMonth =
+    months.find((m) => {
+      const row = recordsByMonth.get(m);
+      return row ? isObservedLocal(row.record) : false;
+    }) ?? null;
+  const lastEstimatedMonthBeforeObserved = firstObservedMonth
+    ? ([...months]
+        .filter((m) => {
+          const row = recordsByMonth.get(m);
+          return m < firstObservedMonth && row ? isEstimated(row.record) : false;
+        })
+        .pop() ?? null)
+    : null;
+  const observed = firstObservedMonth ? recordsByMonth.get(firstObservedMonth)?.record : undefined;
+  const estimated = lastEstimatedMonthBeforeObserved
+    ? recordsByMonth.get(lastEstimatedMonthBeforeObserved)?.record
+    : undefined;
+  const spliceGapPct =
+    observed && estimated && estimated.kki_value > 0
+      ? Number((((observed.kki_value - estimated.kki_value) / estimated.kki_value) * 100).toFixed(1))
+      : null;
+
+  const methodCounts = new Map<string, number>();
+  let hasAnnualCpiHistory = false;
+  for (const month of months) {
+    const record = recordsByMonth.get(month)?.record;
+    if (!record) continue;
+    if (record.estimate_method !== 'observed') {
+      methodCounts.set(record.estimate_method, (methodCounts.get(record.estimate_method) ?? 0) + 1);
+    }
+    if (
+      record.source_periodicity === 'annual' &&
+      (record.estimate_method === 'cpi_chained' ||
+        record.estimate_method === 'headline_cpi_chained')
+    ) {
+      hasAnnualCpiHistory = true;
+    }
+  }
+  const dominantEstimateMethod =
+    [...methodCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+  return {
+    first_observed_month: firstObservedMonth,
+    last_estimated_month_before_observed: lastEstimatedMonthBeforeObserved,
+    splice_gap_pct: spliceGapPct,
+    dominant_estimate_method: dominantEstimateMethod,
+    has_annual_cpi_history: hasAnnualCpiHistory,
+  };
 }
 
 export type CountryMonthlyPipelineRow = {
@@ -136,6 +211,7 @@ export function buildLandingFixtureData(args: {
       basket_version,
       alpha: getAlpha(ccUpper),
       market_type: getMarketType(ccUpper),
+      diagnostics: buildCountryDiagnostics(inner),
       records: {},
       latest_snapshot: {
         snapshot_date: `${lastMonth}-15`,
@@ -159,6 +235,11 @@ export function buildLandingFixtureData(args: {
         local_basket_cost: row.record.local_basket_cost,
         global_basket_cost: row.record.global_basket_cost,
         quality: row.record.quality,
+        estimate_method: row.record.estimate_method,
+        estimate_confidence: row.record.estimate_confidence,
+        source_periodicity: row.record.source_periodicity,
+        base_month: row.record.base_month,
+        estimate_source_ids: row.record.estimate_source_ids,
       };
     }
 

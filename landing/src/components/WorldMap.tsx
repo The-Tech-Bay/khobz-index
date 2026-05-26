@@ -51,11 +51,13 @@ export function WorldMap({ records, selectedMonth, projectionConfig }: Props) {
   } | null>(null);
 
   const [previewCode, setPreviewCode] = useState<string | null>(null);
+  const [hoveredCode, setHoveredCode] = useState<string | null>(null);
 
   const projectionSig = `${projectionConfig.scale}:${projectionConfig.center[0]},${projectionConfig.center[1]}`;
 
   useEffect(() => {
     setPreviewCode(null);
+    setHoveredCode(null);
     setTooltip(null);
   }, [selectedMonth, projectionSig]);
 
@@ -65,15 +67,20 @@ export function WorldMap({ records, selectedMonth, projectionConfig }: Props) {
   const handleHover = useCallback(
     (code: string, event: React.MouseEvent) => {
       if (isTouch) return;
-      const r = records[code];
+      const upper = code.toUpperCase();
+      const r = records[upper];
       if (r) {
+        setHoveredCode(upper);
         setTooltip({ x: event.clientX, y: event.clientY, record: r });
       }
     },
     [records, isTouch],
   );
 
-  const handleLeave = useCallback(() => setTooltip(null), []);
+  const handleLeave = useCallback(() => {
+    setHoveredCode(null);
+    setTooltip(null);
+  }, []);
 
   const handleCountryClick = useCallback(
     (code: string) => {
@@ -128,6 +135,7 @@ export function WorldMap({ records, selectedMonth, projectionConfig }: Props) {
           colorScale={scale}
           projectionConfig={projectionConfig}
           selectedAlpha2={selectedAlpha2ForMap}
+          hoveredAlpha2={hoveredCode}
           onHover={handleHover}
           onLeave={handleLeave}
           onCountryClick={handleCountryClick}

@@ -330,11 +330,43 @@ export const IndexRecordSchema = z.object({
   computed_at: z.string().datetime(),
   source_summary: z.array(SourceContributionSchema),
   quality: QualityLevelSchema,
+  estimate_method: z.enum([
+    "observed",
+    "cpi_chained",
+    "headline_cpi_chained",
+    "global_only_historical"
+  ]).default("observed"),
+  estimate_confidence: z.enum(["observed", "high", "medium", "low"]).default("observed"),
+  source_periodicity: z.enum([
+    "realtime",
+    "daily",
+    "weekly",
+    "monthly",
+    "annual",
+    "interpolated",
+    "unknown"
+  ]).default("monthly"),
+  base_month: z.string().regex(/^\d{4}-\d{2}$/).nullable().default(null),
+  estimate_source_ids: z.array(z.string()).default([]),
   record_hash: z.string().regex(/^[a-f0-9]{64}$/),
 });
 
 export type IndexRecord = z.infer<typeof IndexRecordSchema>;
 ```
+
+Historical fixture diagnostics are derived per country for the landing bundle:
+
+```typescript
+type CountryDiagnostics = {
+  first_observed_month: string | null;
+  last_estimated_month_before_observed: string | null;
+  splice_gap_pct: number | null;
+  dominant_estimate_method: string | null;
+  has_annual_cpi_history: boolean;
+};
+```
+
+These fields are not source observations. They are display/audit metadata used to explain where CPI-chained history meets observed basket data, whether annual CPI appears in the historical series, and whether the splice gap is large enough to warrant a visible UI warning.
 
 ### 3.2 Computation Rules
 
@@ -573,6 +605,11 @@ Flat, one-row-per-month format for researcher import:
 | `methodology_version` | string | Semver |
 | `computed_at` | string | ISO 8601 |
 | `quality` | string | full / degraded / global_only |
+| `estimate_method` | string | observed / cpi_chained / headline_cpi_chained / global_only_historical |
+| `estimate_confidence` | string | observed / high / medium / low |
+| `source_periodicity` | string | monthly / annual / interpolated / source-native cadence |
+| `base_month` | string | observed KKI base month for chained historical records |
+| `estimate_source_ids` | string | pipe-separated provenance list in CSV |
 | `fao_fpi_cereals` | number | FAO FPI cereals sub-index |
 | `fao_fpi_oils` | number | FAO FPI oils sub-index |
 | `fao_fpi_sugar` | number | FAO FPI sugar sub-index |
