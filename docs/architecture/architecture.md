@@ -16,7 +16,7 @@
 ## TL;DR
 
 - **Split architecture (unchanged from §2.1B):** GitHub Actions + **Bun** run the **pipeline** (multi-minute CPU, adapters, Zod validation, KKI engine). **Cloudflare Workers + Hono** serve the **closed API** (read R2/KV, &lt;10ms CPU).
-- **Cadence:** **Weekly** primary pipeline (Monday 06:00 UTC); **weekly** WFP **crisis overlay** (Thursday 06:00 UTC) writes **crisis-signal** snapshots only — **no new KKI**. **Monthly archive gate** on the **first Monday** of each month: Git commit under `data/` + GitHub Release + IPFS pin + Internet Archive.
+- **Cadence:** KKI refreshes source checks weekly and publishes canonical country records at monthly grain. **Weekly** primary pipeline (Monday 06:00 UTC); **weekly** WFP **crisis overlay** (Thursday 06:00 UTC) writes **crisis-signal** snapshots only — **no new KKI**. **Monthly archive gate** on the **first Monday** of each month: Git commit under `data/` + GitHub Release + IPFS pin + Internet Archive.
 - **Publish quality:** Per country, **≥60% of basket weight** must have **priced observations** from surviving sources after fallbacks → **publishable** (may be `degraded` or `global_only`). Below threshold → **skip-country-month** for that country. Shared **global slot** failure can force **skip-week** (all countries) if no global track.
 - **Timeouts & budget:** **30s** per adapter; **5 min** total pipeline job budget; **3×** R2 write retry then **GitHub Release-only** fallback; IPFS/IA failures **non-blocking** with next-day retry.
 

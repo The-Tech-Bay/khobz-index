@@ -3,9 +3,9 @@
 [![License: MIT](https://img.shields.io/badge/Code-MIT-blue.svg)](LICENSE)
 [![License: CC BY 4.0](https://img.shields.io/badge/Data-CC%20BY%204.0-lightgrey.svg)](LICENSE-DATA)
 [![Cadence](https://img.shields.io/badge/cadence-monthly-green.svg)]()
-[![Countries](https://img.shields.io/badge/countries-85+-orange.svg)]()
+[![Countries](https://img.shields.io/badge/countries-238%20in%20fixture-orange.svg)]()
 
-A weekly purchasing-power index measuring the local-currency cost of a fixed weekly subsistence basket.
+A published reference index measuring the local-currency cost of one day of staple subsistence calories (~2,200 kcal per KK). KKI refreshes source checks weekly and publishes canonical country records at monthly grain.
 
 ---
 
@@ -13,9 +13,11 @@ A weekly purchasing-power index measuring the local-currency cost of a fixed wee
 
 **1 KK (Khobz unit) ≈ 1 day of staple subsistence calories for one adult (~2,200 kcal).**
 
-The biology is universal even when the menu is not. A Casablancan and a Mumbaikar both need ~2,200 kcal/day — KKI measures what that costs in local currency, every month, using observed market prices from UN/multilateral datasets.
+The biology is universal even when the menu is not. A Casablancan and a Mumbaikar both need ~2,200 kcal/day — KKI measures what that costs in local currency at **monthly archive grain**, using observed and estimated prices from UN/multilateral datasets (not retail market prices everywhere).
 
-KKI is a **published reference index**, not a token or currency. It has the same legal status as the Big Mac Index, the IMF SDR rate, or Colombia's UVR.
+KKI is a **published reference index**, not a coin, token, cryptocurrency, investment product, wallet, or lending app. It has the same legal status as the Big Mac Index, the IMF SDR rate, or Colombia's UVR.
+
+**Coverage (definitions):** **238 countries** appear in the public landing fixture; **~46** currently carry a local basket price signal in the latest month; countries without a qualifying local signal remain on the **global-only** track.
 
 ---
 
@@ -151,6 +153,12 @@ Use **`bun run cf:provision-deploy -- --sync-github`** (with a real **`CLOUDFLAR
 ## Used By
 
 - [Karama](https://karama.thebay.ma) — a promise-tracking app that uses KKI to anchor informal debts to real purchasing power
+
+---
+
+## Public ship status
+
+Baseline audit (Phase 0) for standalone public launch: [`docs/shipping v1/`](docs/shipping%20v1/README.md). Execution plan: [`ship-todo.md`](ship-todo.md).
 
 ---
 

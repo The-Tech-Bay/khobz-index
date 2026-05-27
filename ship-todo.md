@@ -11,8 +11,9 @@ Canonical public identity:
 - Unit: **KK**, approximately one day of staple subsistence calories.
 - Avoid: coin, token, buy KK, cryptocurrency, wallet, investment, lending app.
 - Domain target: `https://khobz-index.thebay.ma`.
-- API target: `https://kki.thebay.ma`.
-- Optional legacy redirect: `https://karama.thebay.ma/khobz` -> `https://khobz-index.thebay.ma/`.
+- Scientific-name redirect: `https://kilocalorie-index.thebay.ma` -> `https://khobz-index.thebay.ma/`.
+- API target: no public KKI API for v1; any API hostname remains private/internal unless a later release explicitly opens it.
+- Legacy URL policy: hard cutover from `https://karama.thebay.ma/khobz`; do not keep it as a public canonical URL.
 
 ## Operating Rules
 
@@ -78,7 +79,7 @@ Canonical public identity:
 - `landing/vite.config.ts`
   - Base path behavior. No base change should be needed for subdomain-root deployment.
 - `wrangler.jsonc`
-  - Worker/API config; custom domain route for `kki.thebay.ma` belongs here.
+  - Worker/API config; keep API hostnames private/internal for v1 unless a later release explicitly opens a public API.
 - `docs/architecture/openapi.yaml`
   - API server URL.
 - `docs/ops/runbook.md`
@@ -111,9 +112,33 @@ Canonical public identity:
 - `landing/package.json`
 - `.env.example`
 
+### Public Repo Export Strategy
+
+`khobz-index/` is currently developed as an inline directory inside the private Karama monorepo, not as a Git submodule. This is intentional for now: Karama remains the working source of truth, while the public `khobz-index` repository should be created from this directory when launch-ready.
+
+Recommended launch path:
+
+- Keep daily development inside `karama/khobz-index/`.
+- Before public release, audit `khobz-index/` for secrets, private URLs, internal-only notes, and misleading Karama runtime dependencies.
+- Export the directory to a standalone public repo, preferably with `git subtree split --prefix=khobz-index`.
+- Push the split branch to `github.com/The-Tech-Bay/khobz-index`.
+- After launch, decide whether the public repo is synced manually, mirrored from Karama, or becomes the primary Track B repository.
+
+Do not reintroduce a submodule during this ship pass unless there is a deliberate decision to accept the CI and cross-repo access complexity.
+
 ## Phase 0: Baseline Audit
 
 Goal: produce a precise inventory before changing copy or docs.
+
+**Status (2026-05-26):** ✅ Audit complete — deliverables in [`docs/shipping v1/`](docs/shipping%20v1/README.md):
+
+- [Readiness summary](docs/shipping%20v1/phase0-readiness-summary.md) — acceptance criteria, blockers, Phase 1 decisions
+- [Task 0.1 reference inventory](docs/shipping%20v1/task-0.1-karama-reference-inventory.md)
+- [Task 0.2 duplicate clutter inventory](docs/shipping%20v1/task-0.2-duplicate-clutter-inventory.md)
+
+Implementation fixes (copy, domains, methodology truth) remain for Phases 1–7. **Task 0.2** (`* 2.*` deletion) ✅ 2026-05-26. Standalone public framing and domain wiring still open.
+
+**Phase 1 (2026-05-26):** ✅ Complete for naming, cadence, and country-coverage alignment — deliverable [`docs/shipping v1/phase1-identity-alignment.md`](docs/shipping%20v1/phase1-identity-alignment.md). Human decisions **D1–D4** recorded in [`docs/shipping v1/decisions-d1-d4-guide.md`](docs/shipping%20v1/decisions-d1-d4-guide.md); implementation remains for later phases.
 
 ### Task 0.1: Inventory Karama-specific references inside `khobz-index`
 
@@ -181,6 +206,8 @@ Acceptance criteria:
 - No `* 2.*` duplicate files remain in public repo surface unless explicitly justified.
 
 ## Phase 1: Public Identity and Communication Alignment
+
+**Status (2026-05-26):** Tasks **1.1–1.3** implemented for copy/cadence/coverage — deliverable [`docs/shipping v1/phase1-identity-alignment.md`](docs/shipping%20v1/phase1-identity-alignment.md). **Blocked:** README "Used By" (**D2**), all canonical/OG/`learnMoreUrl` URLs (**D4**), press boilerplate URLs (**D4**), GitHub topology links (**D1**).
 
 Goal: make all public-facing copy use one naming system and avoid Karama-app-only framing.
 
@@ -265,6 +292,11 @@ Acceptance criteria:
 ## Phase 2: Methodology Truthfulness and Scientific Standard
 
 Goal: make public methodology reflect actual implemented v1.0 and separate roadmap from live claims.
+
+**Status (2026-05-27):** ✅ Complete — public methodology, long-form research,
+source research, and data-quality supplement now distinguish implemented v1.0
+from roadmap/research claims. Deliverable:
+[`docs/shipping v1/phase2-methodology-truthfulness.md`](docs/shipping%20v1/phase2-methodology-truthfulness.md).
 
 ### Task 2.1: Rewrite public methodology as “v1.0 as implemented”
 
@@ -456,17 +488,19 @@ Files to update:
 Cloudflare action:
 
 - Add `khobz-index.thebay.ma` as custom Pages domain.
-- Optional redirect rule from `karama.thebay.ma/khobz`.
+- Add `kilocalorie-index.thebay.ma` as a scientific-name redirect to `khobz-index.thebay.ma`.
+- Hard-cut `karama.thebay.ma/khobz`; remove it from public canonical links rather than preserving it as a compatibility redirect.
 
 Acceptance criteria:
 
 - Landing can run at subdomain root without Vite basename changes.
 
-### Task 4.2: API domain
+### Task 4.2: Private API configuration
 
 Target:
 
-- `kki.thebay.ma` -> Worker `khobz-index-api`.
+- No public KKI API for v1.
+- Keep Worker/API hostnames private/internal unless a later release explicitly opens a public API.
 
 Files to update:
 
@@ -475,17 +509,10 @@ Files to update:
 - `docs/ops/runbook.md`
 - `../apps/api/wrangler.toml`
 
-Suggested Worker route:
-
-```jsonc
-"routes": [
-  { "pattern": "kki.thebay.ma", "custom_domain": true }
-]
-```
-
 Acceptance criteria:
 
-- Closed API docs, Karama API upstream, and runbook all reference `https://kki.thebay.ma`.
+- Public docs do not present an official public API endpoint.
+- Closed API docs, Karama API upstream, and runbook clearly mark any Worker/API hostname as private/internal.
 
 ## Phase 5: Public GitHub Repo Readiness
 
@@ -764,3 +791,65 @@ Return:
 - GitHub repo has clean README, licensing, governance, contribution, security, data citation, and workflows.
 - Tests/build pass.
 - Final review finds no stale private URLs or misleading Karama-app dependencies.
+
+---
+
+## Addendum — KKI UX Improvement Requirements
+
+These requirements come from the latest landing-page audit after the scientific KKI UX work. They should be handled without weakening the current 60% local-basket coverage gate or hiding methodological uncertainty.
+
+### 1. Separate Global Fallback From Country-Specific KKI
+
+- Do not rank `global_only` countries as if their identical USD value is country-specific.
+- Group or visually de-emphasize `global_only` countries in rankings with copy such as: “Global fallback only — insufficient local basket coverage.”
+- On map and country detail pages, distinguish:
+  - `full` — complete observed local basket.
+  - `degraded` — observed local basket above coverage threshold, but missing some items.
+  - `global_only` — local basket suppressed; KKI uses global commodity track only.
+- Add local coverage metadata to public UI where practical:
+  - number of priced basket items,
+  - nominal basket weight covered,
+  - whether local leg was accepted or suppressed.
+
+### 2. Explain Partial Local Rows Below Threshold
+
+- For countries like Luxembourg, show that local rows may exist but still be below the acceptance threshold.
+- Example explanation: “2 of 5 local basket items available, covering 9.3% of nominal basket weight; below the 60% threshold, so the local leg is suppressed.”
+- Keep the 60% threshold unless a documented methodology change is approved; relaxing it would risk false precision.
+
+### 3. Improve Ranking UX
+
+- Add filters/toggles for:
+  - “Observed local only”
+  - “Include partial local”
+  - “Include global fallback”
+- Consider a separate “Global fallback countries” collapsible section below the main ranking.
+- Do not let 100+ identical fallback values dominate “most expensive” or “least expensive” lists.
+- Add a ranking footnote explaining that identical fallback values reflect shared global commodity pricing, not equal local food costs.
+
+### 4. Improve Country Detail UX
+
+- In the hero/meta row, show a stronger fallback label for `global_only`.
+- In the basket breakdown section, show:
+  - available local rows,
+  - coverage weight,
+  - missing high-weight basket items,
+  - whether local prices are used in the KKI formula.
+- Rename “Latest observed basket breakdown” to “Available latest basket rows” when `quality = global_only` but some rows exist below threshold.
+- Keep local/global split cards, but add copy that the local leg is `0` because coverage failed the threshold, not because food is free.
+
+### 5. Source-Coverage Roadmap
+
+- Prioritize better local sources for high-visibility markets and countries currently stuck at `global_only`:
+  - US: BLS Average Retail Food Prices.
+  - EU/OECD: Eurostat HICP food sub-index and/or national statistical retail food datasets.
+  - Developing markets: FAO FPMA, WFP/HDX, World Bank RTFP.
+  - Universal fallback: IMF Food CPI for local basket movement when item-level prices are absent.
+- Preserve provenance by source and confidence. Better source coverage should improve quality labels; it should not silently backfill weak data as observed.
+
+### 6. US vs Morocco Sanity Checks
+
+- Add an explicit validation note for high-visibility comparisons such as US vs Morocco.
+- The current formula can make Morocco’s KKI higher than the US because Morocco’s observed local basket leg is higher in USD and US industrial food inputs are low-cost.
+- However, US exact levels should be validated against BLS retail prices because FAOSTAT producer-price proxies may understate true retail basket costs.
+- Treat US BLS integration as a source-quality upgrade before making strong public claims about the absolute US level.

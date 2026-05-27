@@ -22,7 +22,7 @@ const FAQ = [
   },
   {
     q: "How often is it updated?",
-    a: "The pipeline runs weekly (every Monday at 06:00 UTC). Monthly snapshots are archived on the first Monday of each month to GitHub Releases, IPFS, and the Internet Archive. Weekly intermediate values are served via the live API for the Karama app.",
+    a: "KKI refreshes source checks weekly and publishes canonical country records at monthly grain. The pipeline runs every Monday at 06:00 UTC; monthly snapshots are archived on the first Monday of each month to GitHub Releases, IPFS, and the Internet Archive. Weekly intermediate values are available via the closed API for registered clients (including the Karama promise-tracking app).",
   },
   {
     q: "Can I use this data?",

@@ -52,9 +52,11 @@ export function HomePage() {
             <span className={styles.accent}>around the world?</span>
           </h1>
           <p className={styles.subtitle}>
-            The Karama Khobz Index measures the cost of one day of staple
+            The Karama Khobz Index (KKI) measures the cost of one day of staple
             subsistence calories (~2,200 kcal) using region-appropriate baskets.
-            An open, calorie-grounded alternative to the Big Mac Index.
+            KKI refreshes source checks weekly and publishes canonical country
+            records at monthly grain. An open, calorie-grounded alternative to the
+            Big Mac Index.
           </p>
         </div>
       </section>

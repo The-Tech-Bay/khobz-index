@@ -28,6 +28,8 @@ Replace with your account’s hostnames after `wrangler deploy` / `wrangler page
 
 **Cron Schedule**: `0 6 * * 1` — Mondays 06:00 UTC (workflow_dispatch also available)
 
+**Public cadence wording:** KKI refreshes source checks weekly and publishes canonical country records at monthly grain (see [`../architecture/architecture.md`](../architecture/architecture.md) §TL;DR).
+
 ---
 
 ## 1. Deploy

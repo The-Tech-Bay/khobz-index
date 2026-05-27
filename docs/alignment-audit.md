@@ -7,6 +7,8 @@
 
 No changes in this pass required rework of any completed §2.1B–§2.5B deliverable (implementation unchanged; docs clarified only). One **forward** action is recorded for Track A §2.6A.
 
+**Public ship baseline (2026-05-26):** Phase 0 audit for standalone KKI launch lives under [`docs/shipping v1/`](./shipping%20v1/README.md) (Karama-reference inventory, duplicate clutter, readiness summary). Use that pack before Phase 1+ copy or repo-export work in [`ship-todo.md`](../ship-todo.md).
+
 ---
 
 ## Change log (file → edit → rationale)
