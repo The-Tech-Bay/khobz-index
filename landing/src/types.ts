@@ -20,6 +20,8 @@ export interface CommodityPrice {
   source_id: string;
   source_tier: 1 | 2 | 3;
   weight: number;
+  fill_kind?: 'observed' | 'interpolated' | 'forward_filled';
+  last_observation_month?: string;
 }
 
 export interface GlobalTrack {

@@ -64,6 +64,8 @@ export function priceRecordsToBasketCommodityPrices(
       price_usd: r.price_usd,
       source_id,
       source_tier: tier,
+      ...(r.fill_kind ? { fill_kind: r.fill_kind } : {}),
+      ...(r.last_observation_month ? { last_observation_month: r.last_observation_month } : {}),
     });
   }
   return prices;

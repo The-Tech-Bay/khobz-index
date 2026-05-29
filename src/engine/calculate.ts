@@ -21,6 +21,7 @@ import { getBasketForCountry } from './basket.js';
 import { computeGlobalBasketCost } from './global-track.js';
 import { computeHybridKKI, getAlpha } from './hybrid.js';
 import { computeLocalBasketCost, LOCAL_BASKET_COVERAGE_THRESHOLD } from './local-coverage.js';
+import { CORRECTION_TYPE, FORMULA_VERSION, METHODOLOGY_VERSION } from './versioning.js';
 
 export interface CalculateKKIInput {
   countryCode: string;
@@ -69,7 +70,7 @@ export async function calculateKKI(input: CalculateKKIInput): Promise<KKIResult>
     globalTrack,
     fxRate,
     currency,
-    methodologyVersion = '1.0.0',
+    methodologyVersion = METHODOLOGY_VERSION,
     sourceSummary = [],
     estimateMethod = 'observed',
     estimateConfidence = 'observed',
@@ -121,6 +122,8 @@ export async function calculateKKI(input: CalculateKKIInput): Promise<KKIResult>
     source_periodicity: sourcePeriodicity,
     base_month: baseMonth,
     estimate_source_ids: estimateSourceIds,
+    formula_version: FORMULA_VERSION,
+    correction_type: CORRECTION_TYPE,
   };
 
   const record_hash = await computeRecordHash(partial);

@@ -31,6 +31,8 @@ type FaostatJsonRow = {
   value: number;
   unit?: string;
   currency?: string;
+  fill_kind?: 'observed' | 'interpolated' | 'forward_filled';
+  last_observation?: string;
 };
 
 /** Lazy-loaded FAOSTAT / UN numeric area code → ISO 3166-1 alpha-2. */
@@ -120,6 +122,8 @@ export function extractFaostatPriceRecordsFromEnvelope(
       source_id: SOURCE_ID,
       fetched_at: fetchedAt,
       country_code: iso2,
+      ...(row.fill_kind ? { fill_kind: row.fill_kind } : {}),
+      ...(row.last_observation ? { last_observation_month: row.last_observation } : {}),
     });
   }
 

@@ -67,7 +67,12 @@ export function displayCurrency(priceCurrency: string, countryCurrency: string):
 
 export function estimateNote(record: CountryRecord): string {
   const method = record.estimate_method ?? 'observed';
-  if (method === 'observed') return 'Direct monthly basket observation.';
+  if (method === 'observed') {
+    if (record.source_periodicity === 'interpolated') {
+      return 'FAOSTAT producer-price proxy; forward-filled or interpolated months are not current local retail observations.';
+    }
+    return 'Direct monthly basket observation.';
+  }
   const base = record.base_month ? ` Anchored to ${record.base_month}.` : '';
   const periodicity =
     record.source_periodicity === 'annual'
@@ -120,6 +125,25 @@ export function computeRecordDiagnostics(records: Record<string, CountryRecord>)
     dominant_estimate_method: dominantEstimateMethod,
     has_annual_cpi_history: hasAnnualCpiHistory,
   };
+}
+
+/** Staleness note from latest snapshot commodity provenance (v1.1). */
+export function localStalenessNote(country: CountryData): string | null {
+  const prices = country.latest_snapshot?.prices ?? [];
+  const stale = prices.filter(
+    (p) => p.fill_kind === 'forward_filled' || p.fill_kind === 'interpolated',
+  );
+  if (stale.length === 0) return null;
+  const lastObs = stale
+    .map((p) => p.last_observation_month)
+    .filter((m): m is string => Boolean(m))
+    .sort()
+    .pop();
+  const kinds = [...new Set(stale.map((p) => p.fill_kind).filter(Boolean))].join(', ');
+  const base = lastObs
+    ? `Last true FAOSTAT observation: ${lastObs}.`
+    : 'Local prices use FAOSTAT producer-price proxy.';
+  return `${base} Current snapshot includes ${kinds.replace(/_/g, ' ')} local proxy rows — not current retail shelf prices.`;
 }
 
 export function countryMethodologySummary(country: CountryData): string {

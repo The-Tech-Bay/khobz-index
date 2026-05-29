@@ -14,7 +14,9 @@
  *      to the adapter's expected codes (FAOSTAT_ITEM_TO_CPC keys).
  *   4. Spreads annual rows to each month of the year (linear interpolation
  *      between adjacent years when possible; flat fill for edge years).
- *   5. Writes `{ "data": [ ... ] }` JSON envelope to the output path.
+ *   5. Forward-fills at most {@link FORWARD_FILL_CAP_MONTHS} months past the
+ *      latest true observation, tagged `forward_filled`.
+ *   6. Writes `{ "data": [ ... ] }` JSON envelope to the output path.
  *
  * The pipeline reads this via FAOSTAT_CP_JSON_PATH env var.
  *
@@ -41,6 +43,11 @@ const BULK_URL =
 const ELEMENT_LCU = '5530';
 const MIN_YEAR = 2018;
 
+/** Max months to forward-fill past last true FAOSTAT observation (v1.1 staleness cap). */
+export const FORWARD_FILL_CAP_MONTHS = 6;
+
+export type FillKind = 'observed' | 'interpolated' | 'forward_filled';
+
 /**
  * FAOSTAT PP item code → adapter item code (FAOSTAT_ITEM_TO_CPC key).
  * PP codes differ from legacy consumer-price codes for some commodities.
@@ -63,9 +70,6 @@ const PP_TO_ADAPTER_ITEM: Record<string, string> = {
   '79': '1579', // Millet
   '83': '2905', // Sorghum
 };
-
-/** Items whose PP price is per tonne of raw commodity that proxies retail per-kg. */
-const _TONNE_TO_KG_ITEMS = new Set(Object.keys(PP_TO_ADAPTER_ITEM));
 
 /** Items where we divide by 1000 and then apply a retail markup factor. */
 const RETAIL_MARKUP: Record<string, number> = {
@@ -102,6 +106,49 @@ type ParsedRow = {
   value: number;
   currency: string;
 };
+
+export type EnvelopeRow = {
+  area_code: string;
+  area: string;
+  item_code: string;
+  item: string;
+  element: string;
+  year: string;
+  months: string;
+  value: number;
+  unit: string;
+  currency: string;
+  fill_kind: FillKind;
+  last_observation: string;
+};
+
+export function ymKey(year: number, month: number): string {
+  return `${year}-${String(month).padStart(2, '0')}`;
+}
+
+export function addMonths(year: number, month: number, delta: number): { year: number; month: number } {
+  let y = year;
+  let m = month + delta;
+  while (m > 12) {
+    m -= 12;
+    y += 1;
+  }
+  while (m < 1) {
+    m += 12;
+    y -= 1;
+  }
+  return { year: y, month: m };
+}
+
+export function compareYm(
+  y1: number,
+  m1: number,
+  y2: number,
+  m2: number,
+): number {
+  if (y1 !== y2) return y1 - y2;
+  return m1 - m2;
+}
 
 function parseCSVLine(line: string): string[] {
   const fields: string[] = [];
@@ -200,20 +247,7 @@ function parseRelevantRows(csvPath: string): ParsedRow[] {
   return rows;
 }
 
-type EnvelopeRow = {
-  area_code: string;
-  area: string;
-  item_code: string;
-  item: string;
-  element: string;
-  year: string;
-  months: string;
-  value: number;
-  unit: string;
-  currency: string;
-};
-
-function convertToEnvelope(parsed: ParsedRow[]): EnvelopeRow[] {
+export function convertToEnvelope(parsed: ParsedRow[]): EnvelopeRow[] {
   type AnnualKey = string;
   const annualMap = new Map<AnnualKey, { row: ParsedRow; monthlyPresent: boolean }>();
   const monthlyRows: ParsedRow[] = [];
@@ -233,7 +267,9 @@ function convertToEnvelope(parsed: ParsedRow[]): EnvelopeRow[] {
   const output: EnvelopeRow[] = [];
 
   for (const mr of monthlyRows) {
-    output.push(toEnvelopeRow(mr, mr.month_num));
+    const m = Number.parseInt(mr.month_num, 10);
+    const lastObs = ymKey(mr.year, m);
+    output.push(toEnvelopeRow(mr, mr.month_num, 'observed', lastObs));
   }
 
   for (const [, { row, monthlyPresent }] of annualMap) {
@@ -243,6 +279,7 @@ function convertToEnvelope(parsed: ParsedRow[]): EnvelopeRow[] {
     const nextKey = `${row.area_code}:${row.item_code_pp}:${row.year + 1}`;
     const prev = annualMap.get(prevKey)?.row;
     const next = annualMap.get(nextKey)?.row;
+    const lastObs = ymKey(row.year, 12);
 
     for (let m = 1; m <= 12; m++) {
       let val = row.value;
@@ -261,13 +298,12 @@ function convertToEnvelope(parsed: ParsedRow[]): EnvelopeRow[] {
         const trend = next.value - row.value;
         val = row.value + trend * frac * 0.3;
       }
-      output.push(toEnvelopeRow({ ...row, value: val }, String(m).padStart(2, '0')));
+      output.push(
+        toEnvelopeRow({ ...row, value: val }, String(m).padStart(2, '0'), 'interpolated', lastObs),
+      );
     }
   }
 
-  // Forward-fill: extend each area+item's latest available data through
-  // current month so the pipeline has local prices for recent periods
-  // where FAOSTAT hasn't published yet.
   const nowDate = new Date();
   const fillToYear = nowDate.getFullYear();
   const fillToMonth = nowDate.getMonth() + 1;
@@ -275,30 +311,43 @@ function convertToEnvelope(parsed: ParsedRow[]): EnvelopeRow[] {
   type LatestKey = string;
   const latestByAreaItem = new Map<
     LatestKey,
-    { year: number; month: number; val: number; row: ParsedRow }
+    { year: number; month: number; val: number; row: ParsedRow; lastObs: string }
   >();
 
   for (const r of parsed) {
     const k = `${r.area_code}:${r.item_code_pp}`;
     const m = r.month_num === 'annual' ? 12 : Number.parseInt(r.month_num, 10);
+    const lastObs = ymKey(r.year, m);
     const existing = latestByAreaItem.get(k);
     if (!existing || r.year > existing.year || (r.year === existing.year && m > existing.month)) {
-      latestByAreaItem.set(k, { year: r.year, month: m, val: r.value, row: r });
+      latestByAreaItem.set(k, { year: r.year, month: m, val: r.value, row: r, lastObs });
     }
   }
 
   let forwardFillCount = 0;
+  let cappedForwardFillCount = 0;
   for (const [, latest] of latestByAreaItem) {
+    const capEnd = addMonths(latest.year, latest.month, FORWARD_FILL_CAP_MONTHS);
+
     let y = latest.year;
     let m = latest.month + 1;
     if (m > 12) {
-      y++;
+      y += 1;
       m = 1;
     }
 
     while (y < fillToYear || (y === fillToYear && m <= fillToMonth)) {
+      if (compareYm(y, m, capEnd.year, capEnd.month) > 0) {
+        cappedForwardFillCount++;
+        break;
+      }
       output.push(
-        toEnvelopeRow({ ...latest.row, year: y, value: latest.val }, String(m).padStart(2, '0')),
+        toEnvelopeRow(
+          { ...latest.row, year: y, value: latest.val },
+          String(m).padStart(2, '0'),
+          'forward_filled',
+          latest.lastObs,
+        ),
       );
       forwardFillCount++;
       m++;
@@ -310,12 +359,17 @@ function convertToEnvelope(parsed: ParsedRow[]): EnvelopeRow[] {
   }
 
   console.info(
-    `[fetch-faostat] Envelope: ${output.length} monthly rows (${forwardFillCount} forward-filled through ${fillToYear}-${String(fillToMonth).padStart(2, '0')})`,
+    `[fetch-faostat] Envelope: ${output.length} monthly rows (${forwardFillCount} forward-filled, ${cappedForwardFillCount} area-items hit ${FORWARD_FILL_CAP_MONTHS}-month cap, through ${fillToYear}-${String(fillToMonth).padStart(2, '0')})`,
   );
   return output;
 }
 
-function toEnvelopeRow(r: ParsedRow, mm: string): EnvelopeRow {
+function toEnvelopeRow(
+  r: ParsedRow,
+  mm: string,
+  fill_kind: FillKind,
+  last_observation: string,
+): EnvelopeRow {
   const adapterItemCode = PP_TO_ADAPTER_ITEM[r.item_code_pp] ?? r.item_code_pp;
   let val = r.value / 1000;
   const markup = RETAIL_MARKUP[r.item_code_pp];
@@ -333,6 +387,8 @@ function toEnvelopeRow(r: ParsedRow, mm: string): EnvelopeRow {
     value: val,
     unit: r.item_code_pp === '267' ? 'LCU per L' : 'LCU per kg',
     currency: r.currency,
+    fill_kind,
+    last_observation,
   };
 }
 

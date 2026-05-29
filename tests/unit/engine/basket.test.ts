@@ -59,7 +59,7 @@ describe('§3.3B.1 basket loader', () => {
     expect(() => getBasketForCountry('XX')).toThrow(UnknownCountryError);
   });
 
-  test('throws BasketVersionMismatchError for unknown version', () => {
-    expect(() => getBasketForCountry('MA', '99.0.0')).toThrow(BasketVersionMismatchError);
+  test('throws BasketVersionMismatchError when no basket version is <= requested', () => {
+    expect(() => getBasketForCountry('MA', '0.0.0')).toThrow(BasketVersionMismatchError);
   });
 });

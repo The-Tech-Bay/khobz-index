@@ -19,7 +19,7 @@ export interface CountryMonthEnvelopeJson {
 }
 
 export const CSV_HEADER =
-  'country_code,month,kki_value,kki_value_usd,currency,alpha,local_basket_cost,global_basket_cost,basket_version,methodology_version,computed_at,quality,estimate_method,estimate_confidence,source_periodicity,base_month,estimate_source_ids,fao_fpi_cereals,fao_fpi_oils,fao_fpi_sugar,brent_crude_usd,gold_xau_usd,record_hash\n';
+  'country_code,month,kki_value,kki_value_usd,currency,alpha,local_basket_cost,global_basket_cost,basket_version,methodology_version,formula_version,correction_type,computed_at,quality,estimate_method,estimate_confidence,source_periodicity,base_month,estimate_source_ids,fao_fpi_cereals,fao_fpi_oils,fao_fpi_sugar,brent_crude_usd,gold_xau_usd,record_hash\n';
 
 /** Serialize one CSV row matching data-schema.md §5.4. */
 export function serializeIndexCsvRow(record: IndexRecord, globalTrack: GlobalTrack): string {
@@ -34,6 +34,8 @@ export function serializeIndexCsvRow(record: IndexRecord, globalTrack: GlobalTra
     csvNum(record.global_basket_cost),
     record.basket_version,
     record.methodology_version,
+    record.formula_version ?? '',
+    record.correction_type ?? '',
     record.computed_at,
     record.quality,
     record.estimate_method,

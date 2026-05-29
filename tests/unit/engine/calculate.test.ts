@@ -102,7 +102,7 @@ describe('§3.3B.5 calculateKKI', () => {
     expect(() => IndexRecordSchema.parse(record)).not.toThrow();
   });
 
-  test('methodology_version is present in output', async () => {
+  test('methodology_version and v1.1 provenance fields are present in output', async () => {
     const { record } = await calculateKKI({
       countryCode: 'MA',
       month: '2022-04',
@@ -111,7 +111,9 @@ describe('§3.3B.5 calculateKKI', () => {
       fxRate: WORKED_FX,
       currency: 'MAD',
     });
-    expect(record.methodology_version).toBe('1.0.0');
+    expect(record.methodology_version).toBe('1.1.0');
+    expect(record.formula_version).toBe('1.0.0');
+    expect(record.correction_type).toBe('additive_provenance_and_staleness_cap');
   });
 
   test('degraded mode when some commodities missing', async () => {

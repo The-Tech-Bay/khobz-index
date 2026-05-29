@@ -272,7 +272,7 @@ describe('§3.3B.6 edge-case tests', () => {
         globalTrack: WORKED_GLOBAL,
         fxRate: FX_MAD_USD,
         currency: 'MAD',
-        methodologyVersion: '99.0.0',
+        methodologyVersion: '0.0.0',
       });
       expect(true).toBe(false);
     } catch (e) {

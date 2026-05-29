@@ -36,13 +36,13 @@ import {
 } from './lib/historical-backfill.js';
 import { lcuPerUsdFromFxRecords } from './lib/fx-utils.js';
 import { assembleGlobalTrackForMonth } from './lib/global-track-assemble.js';
+import { deriveLocalProvenanceFromCommodityPrices } from './lib/local-provenance.js';
 import {
   defaultPreviousUtcMonth,
   expandInclusiveMonths,
   worldBankMonthRange,
 } from './lib/month-utils.js';
-
-const METHODOLOGY_VERSION = '1.0.0';
+import { METHODOLOGY_VERSION } from '../engine/versioning.js';
 const SCHEMA_VERSION = '1.0.0';
 const SCHEMA_MARKETING = '1.0';
 const DEFAULT_HISTORICAL_FROM = '1990-01';
@@ -361,6 +361,7 @@ async function main(): Promise<void> {
         gold: goldSid,
       });
 
+      const localProv = deriveLocalProvenanceFromCommodityPrices(commodityPrices);
       const { record } = await calculateKKI({
         countryCode: ccU,
         month,
@@ -370,6 +371,8 @@ async function main(): Promise<void> {
         currency: cur,
         methodologyVersion: METHODOLOGY_VERSION,
         sourceSummary,
+        sourcePeriodicity: localProv.sourcePeriodicity,
+        estimateConfidence: localProv.estimateConfidence,
       });
 
       monthIndexRecords.push(record);

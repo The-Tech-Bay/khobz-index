@@ -44,6 +44,38 @@ const BASKETS_DIR = resolve(import.meta.dir, '../../data/baskets');
 /** region → methodologyVersion → BasketVersion */
 type BasketRegistry = Map<Region, Map<string, BasketVersion>>;
 
+function parseSemver(version: string): [number, number, number] | null {
+  const m = /^(\d+)\.(\d+)\.(\d+)$/.exec(version.trim());
+  if (!m) return null;
+  return [Number(m[1]), Number(m[2]), Number(m[3])];
+}
+
+function compareSemver(a: string, b: string): number {
+  const pa = parseSemver(a);
+  const pb = parseSemver(b);
+  if (!pa || !pb) return a.localeCompare(b);
+  for (let i = 0; i < 3; i++) {
+    if (pa[i]! !== pb[i]!) return pa[i]! - pb[i]!;
+  }
+  return 0;
+}
+
+/**
+ * Pick the highest basket `methodology_version` that is <= `requested`.
+ * Lets METHODOLOGY_VERSION 1.1.0 use existing 1.0.0 basket files until a v1.1 basket ships.
+ */
+export function resolveBasketMethodologyVersion(
+  available: Iterable<string>,
+  requested: string,
+): string | null {
+  let best: string | null = null;
+  for (const v of available) {
+    if (compareSemver(v, requested) > 0) continue;
+    if (!best || compareSemver(v, best) > 0) best = v;
+  }
+  return best;
+}
+
 function loadAllBaskets(dir: string): BasketRegistry {
   const registry: BasketRegistry = new Map();
   const files = readdirSync(dir).filter((f) => f.endsWith('.json'));
@@ -105,12 +137,18 @@ export function getBasketForCountry(
     throw new BasketVersionMismatchError(methodologyVersion, []);
   }
 
-  const basket = byVersion.get(methodologyVersion);
-  if (!basket) {
+  const resolved =
+    byVersion.get(methodologyVersion) ??
+    (() => {
+      const key = resolveBasketMethodologyVersion(byVersion.keys(), methodologyVersion);
+      return key ? byVersion.get(key) : undefined;
+    })();
+
+  if (!resolved) {
     throw new BasketVersionMismatchError(methodologyVersion, [...byVersion.keys()]);
   }
 
-  return basket;
+  return resolved;
 }
 
 /**

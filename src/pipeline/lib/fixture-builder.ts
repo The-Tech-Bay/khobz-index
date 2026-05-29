@@ -9,6 +9,7 @@ import {
   computeLocalCoverageSummary,
   type LocalCoverageSummary,
 } from '../../engine/local-coverage.js';
+import { deriveLocalProvenanceFromCommodityPrices } from './local-provenance.js';
 import { getRegionForCountry } from '../../shared/countries.js';
 import type {
   CommodityPrice,
@@ -42,6 +43,8 @@ export interface LandingFixtureCommodityPrice {
   source_id: string;
   source_tier: 1 | 2 | 3;
   weight: number;
+  fill_kind?: 'observed' | 'interpolated' | 'forward_filled';
+  last_observation_month?: string;
 }
 
 export interface LandingFixtureGlobalTrackMini {
@@ -269,6 +272,10 @@ export function buildLandingFixtureData(args: {
           source_id: p.source_id,
           source_tier: p.source_tier,
           weight: weightByCode.get(p.commodity_code) ?? 0,
+          ...(p.fill_kind ? { fill_kind: p.fill_kind } : {}),
+          ...(p.last_observation_month
+            ? { last_observation_month: p.last_observation_month }
+            : {}),
         })),
         global_track: toLandingGlobalTrack(lastRow.schemaGlobalTrack),
         quality_flags: {
@@ -313,5 +320,9 @@ function staleInterpolated(row: CountryMonthlyPipelineRow): string[] {
   const ips: string[] = [];
   if (row.staleGold) ips.push('gold_fallback');
   if (row.staleEnergy) ips.push('energy_fallback');
+  const localProv = deriveLocalProvenanceFromCommodityPrices(row.commodityPrices);
+  for (const code of localProv.interpolatedCommodityCodes) {
+    ips.push(`local:${code}`);
+  }
   return ips;
 }

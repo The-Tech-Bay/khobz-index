@@ -19,6 +19,7 @@ import {
   countryMethodologySummary,
   displayCurrency,
   estimateNote,
+  localStalenessNote,
   methodLabel,
   valueForChartMode,
   type ChartConfidence,
@@ -195,6 +196,16 @@ export function CountryPage() {
   const spliceLabel = spliceGapLabel(diagnostics?.splice_gap_pct);
   const localCoverage = getLocalCoverage(country);
   const sanityNote = code ? usMoroccoSanityNote(code) : null;
+  const stalenessNote = localStalenessNote(country);
+  const firstInterpolatedMonth =
+    chartMonths.find((m) => {
+      const rec = country.records[m];
+      return (
+        rec &&
+        (rec.estimate_method ?? "observed") === "observed" &&
+        rec.source_periodicity === "interpolated"
+      );
+    }) ?? null;
   const basketTitle = latestRecord ? basketSectionTitle(latestRecord.quality) : "Latest basket breakdown";
 
   return (
@@ -263,6 +274,12 @@ export function CountryPage() {
         </div>
       )}
 
+      {stalenessNote && (
+        <div className={styles.sanityNote} data-provenance="local-proxy">
+          <strong>Local price provenance:</strong> {stalenessNote}
+        </div>
+      )}
+
       <section className={styles.section}>
         <div className={styles.chartHeader}>
           <div>
@@ -326,6 +343,20 @@ export function CountryPage() {
                 domain={["auto", "auto"]}
               />
               <Tooltip content={<ChartTooltip />} />
+              {firstInterpolatedMonth &&
+                chartData.some((p) => p.month === firstInterpolatedMonth) && (
+                  <ReferenceLine
+                    x={formatMonth(firstInterpolatedMonth)}
+                    stroke="var(--color-warning, #C57A1F)"
+                    strokeDasharray="2 6"
+                    label={{
+                      value: "Forward-filled / interpolated local proxy",
+                      position: "insideTopLeft",
+                      fill: "var(--fg-muted)",
+                      fontSize: 11,
+                    }}
+                  />
+                )}
               {diagnostics?.first_observed_month &&
                 chartData.some((p) => p.month === diagnostics.first_observed_month) && (
                   <ReferenceLine
@@ -414,12 +445,13 @@ export function CountryPage() {
                 <th>Price ({country.currency})</th>
                 <th>Price (USD)</th>
                 <th>Source</th>
+                <th>Provenance</th>
               </tr>
             </thead>
             <tbody>
               {snapshot.prices.length === 0 ? (
                 <tr>
-                  <td className={styles.emptyCell} colSpan={5}>
+                  <td className={styles.emptyCell} colSpan={6}>
                     Commodity line-item data is unavailable for this month.
                   </td>
                 </tr>
@@ -437,6 +469,12 @@ export function CountryPage() {
                         {p.source_id}
                         <span className={styles.tierBadge}>T{p.source_tier}</span>
                       </span>
+                    </td>
+                    <td className={styles.provenanceCell}>
+                      {p.fill_kind ? p.fill_kind.replace(/_/g, " ") : "observed"}
+                      {p.last_observation_month ? (
+                        <span className={styles.provenanceSub}> · last obs {p.last_observation_month}</span>
+                      ) : null}
                     </td>
                   </tr>
                 ))

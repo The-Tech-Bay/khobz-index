@@ -30,6 +30,10 @@ export type DataSlot =
   | 'crude_oil_energy'
   | 'fx_display';
 
+export const FillKindSchema = z.enum(['observed', 'interpolated', 'forward_filled']);
+
+export type FillKind = z.infer<typeof FillKindSchema>;
+
 /** A single normalized price observation */
 export const PriceRecordSchema = z.object({
   commodity: z.string(),
@@ -42,6 +46,13 @@ export const PriceRecordSchema = z.object({
   fetched_at: z.string().datetime(),
   /** When set, observation applies to this ISO 3166-1 alpha-2 market (local sources). */
   country_code: z.string().length(2).optional(),
+  /** FAOSTAT envelope: how this month was derived from producer-price bulk data. */
+  fill_kind: FillKindSchema.optional(),
+  /** Latest true observation month (YYYY-MM) for this area+commodity. */
+  last_observation_month: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/)
+    .optional(),
 });
 
 export type PriceRecord = z.infer<typeof PriceRecordSchema>;
@@ -179,6 +190,11 @@ export const CommodityPriceSchema = z.object({
   price_usd: z.number().positive(),
   source_id: z.string().min(1),
   source_tier: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+  fill_kind: FillKindSchema.optional(),
+  last_observation_month: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/)
+    .optional(),
 });
 
 export type CommodityPrice = z.infer<typeof CommodityPriceSchema>;
@@ -284,6 +300,13 @@ export const IndexRecordSchema = z.object({
     .nullable()
     .default(null),
   estimate_source_ids: z.array(z.string().min(1)).default([]),
+  /** Hybrid formula semver; unchanged in v1.1 (still α·LOCAL + (1−α)·GLOBAL). */
+  formula_version: z
+    .string()
+    .regex(/^\d+\.\d+\.\d+$/)
+    .optional(),
+  /** Machine-readable correction tag when a release adjusts provenance without a formula change. */
+  correction_type: z.string().min(1).optional(),
   record_hash: z.string().regex(/^[a-f0-9]{64}$/),
 });
 
