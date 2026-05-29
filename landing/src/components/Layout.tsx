@@ -15,7 +15,10 @@ export function Layout() {
       <header className={styles.header}>
         <nav className={styles.nav} aria-label="Main navigation">
           <Link to="/" className={styles.logo}>
-            <span className={styles.logoK}>K</span>arama Khobz Index
+            <span className={styles.logoMain}>
+              <span className={styles.logoK}>K</span>arama Khobz Index
+            </span>
+            <span className={styles.logoSub}>Kilocalorie Index</span>
           </Link>
 
           <div className={styles.navLinks}>
