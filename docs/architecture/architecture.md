@@ -303,10 +303,10 @@ Aligned with [`stack.md`](./stack.md) §5.1–5.3; below states **effective** ou
 
 ## 5. Cloudflare Workers deploy topology
 
-### 5.1 Single Worker sketch
+### 5.1 Single Worker sketch (internal — not a public v1 surface)
 
 ```
-Route host: kki-api.<account>.workers.dev (prod CNAME optional)
+Host: private *.workers.dev (Track A upstream + operator probes only; no public API domain in v1)
 Bindings:
   KKI_DATA   -> R2 bucket
   KKI_KV     -> KV namespace (tokens + optional JWKS cache)

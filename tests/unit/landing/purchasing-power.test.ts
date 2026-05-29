@@ -57,9 +57,7 @@ describe('landing purchasing power calculator', () => {
   });
 
   test('labels historical chart provenance without raw enum copy', () => {
-    expect(methodLabel('headline_cpi_chained', 'annual')).toBe(
-      'Annual headline CPI estimate',
-    );
+    expect(methodLabel('headline_cpi_chained', 'annual')).toBe('Annual headline CPI estimate');
     expect(confidenceLabel('low')).toBe('Low-confidence estimate');
     expect(displayCurrency('LCU', 'MAD')).toBe('MAD');
   });

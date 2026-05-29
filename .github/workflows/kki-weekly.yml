@@ -1,75 +1,153 @@
-name: KKI weekly pipeline
+# Production weekly pipeline for standalone repo (The-Tech-Bay/khobz-index).
+# While khobz-index/ lives in the Karama monorepo, the active schedule is the
+# parent workflow at ../../.github/workflows/kki-weekly.yml (working-directory: khobz-index).
+# Enable this file and disable the parent cron on export day — see docs/ops/public-repo-export.md.
+
+name: KKI Weekly Pipeline
 
 on:
   schedule:
-    - cron: '0 6 * * 1'
+    - cron: "0 6 * * 1"
   workflow_dispatch:
 
-# Cron on GitHub Actions is best-effort (~±15 min drift). Monday 06:00 UTC remains the contract.
+concurrency:
+  group: kki-weekly-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
-  contents: read
-  actions: write
+  contents: write
+  issues: write
 
 jobs:
-  pipeline:
+  weekly:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
-    outputs:
-      first_monday: ${{ steps.calendar.outputs.first_monday }}
-      archive_month: ${{ steps.calendar.outputs.archive_month }}
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: oven-sh/setup-bun@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
 
-      - name: Calendar gate + archive month label
-        id: calendar
-        run: |
-          set -euo pipefail
-          DOW=$(date -u +%u)
-          DOM=$(date -u +%d)
-          ARCHIVE_MONTH=$(date -u -d "$(date -u +%Y-%m-01) -1 month" +%Y-%m)
-          echo "archive_month=$ARCHIVE_MONTH" >> "$GITHUB_OUTPUT"
-          if [ "$DOW" -eq 1 ] && [ "$DOM" -le 7 ]; then
-            echo "first_monday=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "first_monday=false" >> "$GITHUB_OUTPUT"
-          fi
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2"
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Run pipeline (fetch → validate → calculate → store stub)
-        run: bun run pipeline -- --month=${{ steps.calendar.outputs.archive_month }}
+      - name: Fetch FAOSTAT producer prices (bulk CSV → JSON envelope)
+        run: bun run pipeline:prefetch
 
-      - name: Store to R2 (§3.4B — placeholder)
+      - name: Resolve 6-month window for fixture history
+        id: months
         run: |
-          echo "Wire wrangler/S3 sync here in §3.4B when snapshots + credentials are ready."
-          echo "Secrets CLOUDFLARE_API_TOKEN / R2_* are reserved for that step."
+          FROM=$(date -u -d "$(date -u +%Y-%m-01) -6 months" +%Y-%m 2>/dev/null || date -u -v-6m +%Y-%m)
+          TO=$(date -u -d "$(date -u +%Y-%m-01) -1 month" +%Y-%m 2>/dev/null || date -u -v-1m +%Y-%m)
+          echo "from=$FROM" >> "$GITHUB_OUTPUT"
+          echo "to=$TO" >> "$GITHUB_OUTPUT"
+          echo "Pipeline window: $FROM → $TO"
 
-      - uses: actions/upload-artifact@v4
+      - name: Run pipeline (fetch → calculate → R2 mirror + summaries)
+        env:
+          FAOSTAT_CP_JSON_PATH: data/reference/faostat-pp-backfill.json
+        run: bun run src/pipeline/run.ts --from=${{ steps.months.outputs.from }} --to=${{ steps.months.outputs.to }}
+
+      - name: Source degradation warning
+        run: |
+          set -euo pipefail
+          DEG="$(jq -r '.degraded_source_count // 0' build/pipeline-run-summary.json)"
+          if [ "${DEG}" -ge 2 ]; then
+            echo "::warning::KKI pipeline: ${DEG} sources not healthy (see build/pipeline-run-summary.json)"
+          fi
+
+      - name: Install wrangler
+        run: npm install -g wrangler@4.90.0
+
+      - name: Sync R2 (mirror + state)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] || [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+            echo "CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID unset — skipping R2 sync."
+            exit 0
+          fi
+          wrangler --version
+          upload_one() {
+            local f="$1"
+            local rel="${f#build/r2-mirror/}"
+            wrangler r2 object put "khobz-index-snapshots/${rel}" --file="$f" --remote 2>/dev/null && echo "OK: $rel" || echo "FAIL: $rel" >&2
+          }
+          export -f upload_one
+          export CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID
+          if [ -d build/r2-mirror ]; then
+            find build/r2-mirror -type f | xargs -P 8 -I{} bash -c 'upload_one "$@"' _ {}
+          fi
+          if [ -f build/last-run-state.json ]; then
+            wrangler r2 object put khobz-index-snapshots/state/last-run.json --file=build/last-run-state.json --remote
+          fi
+
+      - name: Update Workers KV (GET /health)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          KKI_KV_NAMESPACE_ID: ${{ secrets.KKI_KV_NAMESPACE_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] || [ -z "${KKI_KV_NAMESPACE_ID:-}" ]; then
+            echo "CLOUDFLARE_API_TOKEN or KKI_KV_NAMESPACE_ID unset — skipping KV update."
+            exit 0
+          fi
+          wrangler kv key put pipeline:status --namespace-id="${KKI_KV_NAMESPACE_ID}" --path=build/pipeline-kv-pipeline-status.json --remote
+
+      - name: GitHub Release (build artifacts)
+        uses: softprops/action-gh-release@v2
         with:
-          name: khobz-archive
-          path: build/
+          tag_name: kki-weekly-${{ github.run_id }}
+          name: "KKI weekly run ${{ github.run_id }}"
+          body: |
+            Automated weekly pipeline artifact (§3.8B). See `pipeline-run-summary.json` in attached files.
+            Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          files: |
+            build/khobz-index-*.json
+            build/khobz-index-*.csv
+            build/pipeline-run-summary.json
+            build/pipeline-kv-pipeline-status.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  publish:
-    needs: pipeline
-    if: success() && needs.pipeline.outputs.first_monday == 'true'
-    uses: ./.github/workflows/publish.yml
-    with:
-      month: ${{ needs.pipeline.outputs.archive_month }}
-    secrets: inherit
-
-  notify_failure:
-    needs: pipeline
-    if: failure()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Failure marker (enable repo Notifications → Actions for emails)
+      - name: Build and deploy landing page
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          echo "::error::KKI weekly pipeline failed for run ${{ github.run_id }}. Check logs and use workflow_dispatch to retry."
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
+            echo "CLOUDFLARE_API_TOKEN unset — skipping landing deploy."
+            exit 0
+          fi
+          cd landing && bun install --frozen-lockfile && bun run build && wrangler pages deploy dist --project-name=khobz-index-landing --branch=main --commit-dirty=true
+
+  notify-failure:
+    needs: weekly
+    if: ${{ always() && needs.weekly.result == 'failure' }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - name: Open ops issue (email via GitHub notifications)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[CRITICAL] KKI weekly pipeline failed (run ${context.runId})`,
+              body: `Workflow: ${context.workflow}\nRun: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}\n\nEnable **Watch → Actions** or **Settings → Notifications → Actions** on the repo for email alerts.`,
+            });

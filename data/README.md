@@ -2,7 +2,9 @@
 
 **KKI (Karama Khobz Index)** is a published reference index: the **local-currency cost of one “Khobz unit” (KK)** — roughly one adult day of staple subsistence calories (~2,200 kcal) from a **fixed regional basket** of staples. It is **not** a token, currency, or regulated instrument—the same class of artifact as the Big Mac Index or IMF published rates.
 
-Journalists, researchers, and dashboards should use this **static archive** (open files). The live KKI HTTP API is **closed** to app traffic only at MVP; there is **no** anonymous public API tier. See [`docs/architecture/api-contract.md`](../docs/architecture/api-contract.md) §7 and [`docs/kki/kki_research.md`](../../docs/kki/kki_research.md) §7.2.
+Journalists, researchers, and dashboards should use this **static archive** (open files) and the **public landing** at [https://khobz-index.thebay.ma/](https://khobz-index.thebay.ma/). The live KKI HTTP API is **closed** and **not publicly accessible in v1** (Track A backend only). See [`docs/architecture/api-contract.md`](../docs/architecture/api-contract.md) §7 and [`docs/methodology.md`](../docs/methodology.md).
+
+**Methodology:** [`docs/methodology.md`](../docs/methodology.md) · **Deep research:** [`docs/kki/kki_research.md`](../docs/kki/kki_research.md)
 
 ---
 
@@ -17,15 +19,19 @@ Each publication month `YYYY-MM` ships as:
 | `khobz-index-YYYY-MM.json` | Machine-readable monthly rollup |
 | `khobz-index-YYYY-MM.csv` | Flat table for spreadsheets |
 
-**Browse releases:** `https://github.com/<org>/<repo>/releases` (replace with the canonical public repo, e.g. post-launch `The-Tech-Bay/khobz-index`).
+**Browse releases:** [https://github.com/The-Tech-Bay/khobz-index/releases](https://github.com/The-Tech-Bay/khobz-index/releases)
 
 **Direct download (pattern):**
 
-`https://github.com/<org>/<repo>/releases/download/vYYYY-MM/khobz-index-YYYY-MM.json`
+`https://github.com/The-Tech-Bay/khobz-index/releases/download/vYYYY-MM/khobz-index-YYYY-MM.json`
 
 **Tag convention:** `vYYYY-MM` (e.g. `v2026-04`).
 
 Bandwidth is served from GitHub’s CDN; **$0** for public consumers.
+
+### Canonical grain: monthly
+
+KKI source checks run **weekly** (Mondays 06:00 UTC), but the **canonical, citable record is published at monthly grain** (`YYYY-MM`). Each month’s per-country record and the bundled rollup are the unit you should cite and download — intra-month weekly runs refresh source health and the live landing fixture but do **not** create new canonical monthly records. A KKI value published under a methodology version is never recalculated retroactively (see [`docs/methodology.md`](../docs/methodology.md) §6 and [`docs/architecture/architecture.md`](../docs/architecture/architecture.md) §TL;DR). For a given citation, always pin both `methodology_version` and month.
 
 ### 2. IPFS (content-addressed)
 
@@ -43,7 +49,7 @@ Items are uploaded under identifier `khobz-index-YYYY-MM`. Stable catalog page:
 
 Wayback coverage for the GitHub Release asset (pattern from §7.4 of the API contract):
 
-`https://web.archive.org/web/*/https://github.com/<org>/<repo>/releases/download/vYYYY-MM/khobz-index-YYYY-MM.json`
+`https://web.archive.org/web/*/https://github.com/The-Tech-Bay/khobz-index/releases/download/vYYYY-MM/khobz-index-YYYY-MM.json`
 
 ---
 
@@ -71,9 +77,11 @@ Monthly **rollup** assets on Releases may bundle **all countries** for one month
 
 ---
 
-## License
+## License and attribution
 
 Data files are licensed under **CC BY 4.0**. See [`LICENSE-DATA`](../LICENSE-DATA).
+
+**Publisher:** The Tech Bay. **Methodology** originally developed through the Karama project. Attribution under CC BY 4.0 should credit *The Tech Bay — Karama Khobz Index (KKI)* and link to [https://khobz-index.thebay.ma/](https://khobz-index.thebay.ma/) or the GitHub release used.
 
 ---
 
@@ -81,19 +89,19 @@ Data files are licensed under **CC BY 4.0**. See [`LICENSE-DATA`](../LICENSE-DAT
 
 Use a form like:
 
-> Karama Khobz Index (KKI) — monthly reference basket cost dataset, version \<methodology_version\>, month \<YYYY-MM\>. Retrieved from \<URL or GitHub Release\>. Licensed CC BY 4.0.
+> The Tech Bay — Karama Khobz Index (KKI), monthly reference basket cost dataset, version \<methodology_version\>, month \<YYYY-MM\>. Retrieved from \<URL or GitHub Release\>. Licensed CC BY 4.0.
 
 **DOI:** _pending formal registration_ — replace with the project DOI once minted (e.g. Zenodo or institutional archive).
 
 **Suggested BibTeX (placeholder DOI):**
 
 ```bibtex
-@misc{karama2026kki,
+@misc{thetechbay2026kki,
   title        = {Karama Khobz Index (KKI): Monthly staple basket reference costs},
-  author       = {{Karama}},
+  author       = {{The Tech Bay}},
   year         = {2026},
-  howpublished = {\url{https://github.com/<org>/<repo>/releases}},
-  note         = {Data licensed CC BY 4.0. DOI: pending},
+  howpublished = {\url{https://github.com/The-Tech-Bay/khobz-index/releases}},
+  note         = {Methodology developed through the Karama project. Data licensed CC BY 4.0. DOI: pending},
 }
 ```
 
@@ -103,4 +111,4 @@ Use a form like:
 
 Static archive automation lives in [`src/archive/`](../src/archive/) (`runMonthlyArchive`, GitHub Release + Pinata + Internet Archive). **Do not commit secrets**; use env vars in [`../.env.example`](../.env.example) (`PINATA_JWT`, `IA_S3_ACCESS_KEY`, `IA_S3_SECRET_KEY`).
 
-**Monthly pipeline benchmarks + FAOSTAT backfill** — bundled `gold` / `Brent` / **FAO FPI cereals·oils·sugar** CSV and notes on **`FAOSTAT_CP_JSON_PATH`**: [`docs/kki/kki-data-quality.md`](../../docs/kki/kki-data-quality.md).
+**Monthly pipeline benchmarks + FAOSTAT backfill** — bundled `gold` / `Brent` / **FAO FPI cereals·oils·sugar** CSV and notes on **`FAOSTAT_CP_JSON_PATH`**: [`docs/kki/kki-data-quality.md`](../docs/kki/kki-data-quality.md).

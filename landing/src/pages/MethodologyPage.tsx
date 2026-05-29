@@ -11,6 +11,13 @@ const BASKETS = [
   { region: "OECD / Europe", nickname: "Loaf basket", items: "Wheat bread, dairy, oil, sugar, eggs", kcal: "~15,500" },
 ];
 
+const SOURCE_ROADMAP = [
+  { market: "United States", priority: "BLS Average Retail Food Prices", status: "Planned — improves absolute US levels vs FAOSTAT producer proxies" },
+  { market: "EU / OECD", priority: "Eurostat HICP food sub-index and national retail food datasets", status: "Research" },
+  { market: "Developing markets", priority: "FAO FPMA, WFP/HDX, World Bank RTFP", status: "Partial — WFP VAM where available" },
+  { market: "Universal fallback", priority: "IMF Food CPI for local basket movement without item prices", status: "Implemented for historical CPI chaining" },
+];
+
 const FAQ = [
   {
     q: "What is a KK?",
@@ -22,19 +29,23 @@ const FAQ = [
   },
   {
     q: "How often is it updated?",
-    a: "KKI refreshes source checks weekly and publishes canonical country records at monthly grain. The pipeline runs every Monday at 06:00 UTC; monthly snapshots are archived on the first Monday of each month to GitHub Releases, IPFS, and the Internet Archive. Weekly intermediate values are available via the closed API for registered clients (including the Karama promise-tracking app).",
+    a: "KKI refreshes source checks weekly and publishes canonical country records at monthly grain. The pipeline runs every Monday at 06:00 UTC; monthly snapshots are archived on GitHub Releases, IPFS, and the Internet Archive.",
   },
   {
     q: "Can I use this data?",
     a: "Yes. All data files are licensed under CC BY 4.0. Download monthly releases from GitHub, fetch content-addressed snapshots from IPFS, or browse the Internet Archive. Citation format and BibTeX are available in the data README.",
   },
   {
-    q: "What sources does the index use?",
-    a: "The KKI draws from six source tiers: FAO Food Price Index (global cereals, oils, sugar sub-indices), FAOSTAT (local commodity prices), WFP VAM DataBridges (local market prices for crisis countries), World Bank Pink Sheet (energy/Brent crude), and gold spot from Goldprice.dev, Metals.dev, and LBMA. Each data slot has ≥2 source fallback chains.",
+    q: "What sources does the index use in v1.0?",
+    a: "As implemented today: FAO Food Price Index sub-indices (global cereals, oils, sugar), FAOSTAT producer/wholesale commodity prices (local leg where available), WFP VAM DataBridges (crisis markets), World Bank Pink Sheet (Brent crude), and gold spot (Goldprice.dev, Metals.dev, LBMA fallbacks). Each data slot has ≥2 source fallback chains. See docs/kki/kki-data-quality.md for caveats.",
+  },
+  {
+    q: "What do full, degraded, and global_only mean?",
+    a: "These quality labels describe local basket coverage, separate from historical-estimate confidence. full = enough local prices to use the nominal basket. degraded = at least ~60% of basket weight has prices, but some items are missing (weights re-normalized). global_only = below the ~60% weight threshold, so the local leg is suppressed and KKI uses only the global commodity track. Countries can show commodity rows below threshold without using them in the formula.",
   },
   {
     q: "What does the alpha (α) parameter mean?",
-    a: "Alpha controls the balance between local market prices and global commodity prices in the hybrid formula. α = 0.65 (default) means 65% local, 35% global. Countries with subsidized markets (e.g., Egypt) use α = 0.50 to lean more on global prices. Countries with unreliable local data use α = 0.35. If local data is entirely missing, α falls to 0.00 (global-only).",
+    a: "Alpha controls the balance between local market prices and global commodity prices in the hybrid formula. α = 0.65 (default) means 65% local, 35% global when the local leg is accepted. Countries with subsidized markets (e.g., Egypt) use α = 0.50. If local coverage fails the threshold, α falls to 0.00 (global_only).",
   },
 ];
 
@@ -53,7 +64,9 @@ export function MethodologyPage() {
       <p className={styles.intro}>
         The Karama Khobz Index (KKI) measures the <strong>local-currency cost
         of one day of staple subsistence calories</strong> (~2,200 kcal) for one
-        adult. It is an open, calorie-grounded alternative to the Big Mac Index.
+        adult. Scientific alias: Karama Kilocalorie Index. It is an open,
+        calorie-grounded alternative to the Big Mac Index — published reference
+        data, not a currency or investment product.
       </p>
 
       <section className={styles.section}>
@@ -99,7 +112,8 @@ export function MethodologyPage() {
             <div className={styles.formulaLegendItem}>
               <span className={styles.dotLocal} />
               <strong>LOCAL basket</strong> — weighted average of regional staple
-              prices from WFP VAM, FAOSTAT, and national statistics
+              prices from WFP VAM, FAOSTAT, and national statistics (when coverage
+              clears the ~60% nominal-weight threshold)
             </div>
             <div className={styles.formulaLegendItem}>
               <span className={styles.dotGlobal} />
@@ -111,7 +125,8 @@ export function MethodologyPage() {
               <span className={styles.dotAlpha} />
               <strong>α (alpha)</strong> — per-country hybrid weight (default
               0.65). Tuned by market type: high-trust = 0.80, standard = 0.65,
-              subsidy-heavy = 0.50, low-trust = 0.35
+              subsidy-heavy = 0.50, low-trust = 0.35. Forced to 0 when local
+              coverage fails.
             </div>
           </div>
         </div>
@@ -149,6 +164,35 @@ export function MethodologyPage() {
       </section>
 
       <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>Source coverage roadmap</h2>
+        <p className={styles.body}>
+          v1.0 publishes with the sources above. Better local coverage should
+          improve quality labels — it does not silently backfill weak data as
+          observed.
+        </p>
+        <div className={styles.tableWrapper}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Market</th>
+                <th>Priority source</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {SOURCE_ROADMAP.map((row) => (
+                <tr key={row.market}>
+                  <td className={styles.regionName}>{row.market}</td>
+                  <td>{row.priority}</td>
+                  <td>{row.status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Frequently asked questions</h2>
         <div className={styles.faqList}>
           {FAQ.map((item) => (
@@ -164,7 +208,8 @@ export function MethodologyPage() {
         <h2 className={styles.sectionTitle}>Full methodology</h2>
         <p className={styles.body}>
           For the complete research document covering data sources, reliability
-          tiers, failure modes, and risk analysis, see the{" "}
+          tiers, failure modes, and risk analysis, see{" "}
+          the{" "}
           <a
             href="https://github.com/The-Tech-Bay/khobz-index/blob/main/docs/kki/kki_research.md"
             target="_blank"
@@ -172,7 +217,7 @@ export function MethodologyPage() {
           >
             full methodology on GitHub
           </a>
-          .
+          {" "}(<code>docs/kki/kki_research.md</code> in this repo).
         </p>
         <p className={styles.license}>
           Data licensed under{" "}

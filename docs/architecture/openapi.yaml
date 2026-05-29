@@ -6,14 +6,17 @@ info:
   description: |
     Closed authenticated API for the Karama backend (Track A) only.
     Supabase session JWT is exchanged for a short-lived opaque KKI token.
+    **Not a public endpoint in v1** — do not cite or link this hostname in press,
+    landing, or README copy. Public consumers use the static archive and
+    https://khobz-index.thebay.ma/ instead.
     See api-contract.md for prose contract, auth flow, rate limits, and static archive.
   version: 1.0.0
   contact:
     name: Karama / khobz-index
 
 servers:
-  - url: https://kki-api.example.workers.dev
-    description: Dedicated Cloudflare Worker hostname (replace at deploy)
+  - url: /
+    description: Internal Cloudflare Worker origin (hostname is private; not published for v1)
 
 tags:
   - name: Auth

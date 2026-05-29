@@ -89,7 +89,7 @@ flowchart LR
 
 **Pipeline compute: GitHub Actions + Bun**
 
-- The `khobz-index` repo is **private until launch** (MIT + CC BY 4.0 once public). GitHub Actions Free plan includes **2,000 minutes/month for private repositories** — the weekly pipeline run uses ~12 minutes/month (4 runs × ~3 min), consuming 0.6% of the quota. Once the repo goes public at launch, Actions minutes become unlimited.
+- The canonical public repo is [The-Tech-Bay/khobz-index](https://github.com/The-Tech-Bay/khobz-index) (MIT + CC BY 4.0). While the repo is private during pre-launch, GitHub Actions Free plan includes **2,000 minutes/month for private repositories** — the weekly pipeline run uses ~12 minutes/month (4 runs × ~3 min), consuming 0.6% of the quota. Once public, Actions minutes become unlimited.
 - A weekly cron (`0 6 * * 1` — every Monday at 06:00 UTC) gives a 6-hour job timeout per run. Monday timing ensures weekend data from real-time sources (gold, FX) is captured at market open, and WFP's weekly data drops (typically mid-week prior) are included.
 - Bun runs TypeScript natively, honoring R9 defaults. The pipeline scripts live in the same repo as the methodology, enabling `bun test` to verify calculations.
 - R2 uploads from GitHub Actions use the S3-compatible API with a service account credential (stored as a GitHub Actions secret). `wrangler r2 object put` is also available.

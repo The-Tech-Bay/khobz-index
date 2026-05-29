@@ -7,7 +7,15 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**/*.ts", "**/*.json", "**/*.jsonc", "!node_modules", "!dist", "!build"]
+    "includes": [
+      "**/*.ts",
+      "**/*.json",
+      "**/*.jsonc",
+      "!node_modules",
+      "!dist",
+      "!build",
+      "!**/landing/public/data/fixture/**"
+    ]
   },
   "formatter": {
     "enabled": true,

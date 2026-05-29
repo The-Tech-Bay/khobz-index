@@ -7,6 +7,8 @@
 
 A published reference index measuring the local-currency cost of one day of staple subsistence calories (~2,200 kcal per KK). KKI refreshes source checks weekly and publishes canonical country records at monthly grain.
 
+**Public site:** [https://khobz-index.thebay.ma/](https://khobz-index.thebay.ma/) · **Methodology:** [`docs/methodology.md`](docs/methodology.md)
+
 ---
 
 ## What is 1 KK?
@@ -103,13 +105,20 @@ Key design decisions:
 
 Architecture reference: [`docs/architecture/stack.md`](docs/architecture/stack.md) · [`docs/architecture/architecture.md`](docs/architecture/architecture.md) · static archive naming [`docs/architecture/api-contract.md`](docs/architecture/api-contract.md) §7.
 
-> **Parent repository:** `khobz-index/` lives inside the **Karama checkout** (parent folder). GitHub Actions workflows live at that parent’s [`.github/workflows/`](../.github/workflows/) (not under `khobz-index/`).
+**Dual-mode layout (D1-A):**
+
+| Mode | Weekly pipeline | Unit CI |
+|------|-----------------|---------|
+| **Monorepo (current production)** | Parent [`.github/workflows/kki-weekly.yml`](../.github/workflows/kki-weekly.yml) with `working-directory: khobz-index` | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) in this folder |
+| **Standalone** [`The-Tech-Bay/khobz-index`](https://github.com/The-Tech-Bay/khobz-index) | [`.github/workflows/kki-weekly.yml`](.github/workflows/kki-weekly.yml) (ported from parent; enable on export day) | Same `ci.yml` |
+
+Export procedure: [`docs/ops/public-repo-export.md`](docs/ops/public-repo-export.md). Do **not** disable the parent cron until secrets are migrated.
 
 | Workflow | Trigger | Purpose |
 |---|---|---|
-| [`ci.yml`](../.github/workflows/ci.yml) | Push / PR → `main` | Root Karama package CI; see root `package.json` |
-| [`kki-weekly.yml`](../.github/workflows/kki-weekly.yml) | Cron Mon **06:00 UTC**, `workflow_dispatch` | Run `khobz-index` pipeline, optional R2/KV sync, weekly **Release**, **failure Issue** |
-| `publish.yml` | *Planned* | Monthly archive gate (first Mon) — not yet in repo; see architecture §2 |
+| [`ci.yml`](.github/workflows/ci.yml) | Push / PR → `main` | Lint, typecheck, unit tests |
+| [`kki-weekly.yml`](.github/workflows/kki-weekly.yml) | Cron Mon **06:00 UTC**, `workflow_dispatch` | Pipeline, optional R2/KV sync, weekly **Release**, landing deploy, **failure Issue** |
+| [`publish.yml`](.github/workflows/publish.yml) | First Monday gate | Monthly archive (GitHub Release + IPFS + IA) |
 
 **Tests:** default CI excludes live HTTP calls. Integration tests use `describe('@live', …)` under `tests/live` and run with `LIVE_API=1 bun run test:live`.
 
@@ -117,9 +126,11 @@ Architecture reference: [`docs/architecture/stack.md`](docs/architecture/stack.m
 
 **Static archive (§3.6B):** [`src/archive/`](src/archive/) — `runMonthlyArchive` (GitHub Release + Pinata IPFS + Internet Archive S3-like upload, release-note placeholders); public data guide [`data/README.md`](data/README.md). Tests: [`tests/unit/archive/`](tests/unit/archive/).
 
-**Closed API (§3.5B):** Cloudflare Worker entry [`src/api/index.ts`](src/api/index.ts) — Hono routes `POST /auth/exchange`, `GET /kki/:country/:month`, `GET /kki/latest/:country`, `GET /basket/:version`, `GET /health`. Bindings: R2 `KKI_DATA`, KV `KKI_KV`. Contract: [`docs/architecture/api-contract.md`](docs/architecture/api-contract.md). Local: `bun run dev:api` (requires [**`wrangler.jsonc`**](wrangler.jsonc) KV id + R2 bucket; run **`bash scripts/cf-bootstrap.sh`** once). Tests: [`tests/unit/api/integration.test.ts`](tests/unit/api/integration.test.ts). **Ops:** [`docs/ops/runbook.md`](docs/ops/runbook.md).
+**Closed API (§3.5B):** Cloudflare Worker entry [`src/api/index.ts`](src/api/index.ts) — Hono routes `POST /auth/exchange`, `GET /kki/:country/:month`, `GET /kki/latest/:country`, `GET /basket/:version`, `GET /health`. Bindings: R2 `KKI_DATA`, KV `KKI_KV`. Contract: [`docs/architecture/api-contract.md`](docs/architecture/api-contract.md). **Not publicly accessible in v1** — Track A backend only; no public API hostname is published. Local: `bun run dev:api` (requires [**`wrangler.jsonc`**](wrangler.jsonc) KV id + R2 bucket; run **`bash scripts/cf-bootstrap.sh`** once). Tests: [`tests/unit/api/integration.test.ts`](tests/unit/api/integration.test.ts). **Ops:** [`docs/ops/runbook.md`](docs/ops/runbook.md) (internal operator URLs).
 
 **Local parity:** `bun install && bun run lint && bun run format:check && bun run typecheck && bun run test`. Optional workflow emulation: [nektos/act](https://github.com/nektos/act) (`act push -W .github/workflows/ci.yml`).
+
+**Releasing:** ordered monthly publication steps in [`docs/ops/public-release-checklist.md`](docs/ops/public-release-checklist.md); deploy/rollback/incident detail in [`docs/ops/runbook.md`](docs/ops/runbook.md).
 
 **Operational notes**
 
@@ -129,7 +140,10 @@ Architecture reference: [`docs/architecture/stack.md`](docs/architecture/stack.m
 
 ### Repository secrets (GitHub Actions)
 
-Configure these in the **GitHub repository** that contains this folder (e.g. **karama** at the parent repo root: Settings → Secrets and variables → Actions):
+Configure these in the **GitHub repository** that runs the weekly workflow:
+
+- **Monorepo (today):** parent **karama** repo — Settings → Secrets and variables → Actions
+- **Standalone (post-export):** **The-Tech-Bay/khobz-index** — same secret names; see [`docs/ops/public-repo-export.md`](docs/ops/public-repo-export.md)
 
 | Secret | Used by | Purpose |
 |---|---|---|
@@ -148,11 +162,15 @@ Use **`bun run cf:provision-deploy -- --sync-github`** (with a real **`CLOUDFLAR
 
 **API-token CI (`kki-weekly.yml`):** repo secrets **`CLOUDFLARE_API_TOKEN`**, **`CLOUDFLARE_ACCOUNT_ID`**, **`KKI_KV_NAMESPACE_ID`** (see table above; values are never logged in docs).
 
+**npm `private` field:** Both root and `landing/package.json` set `"private": true` intentionally — this project is not published to npm. A public GitHub repo can keep `private: true` on package manifests.
+
 ---
 
 ## Used By
 
-- [Karama](https://karama.thebay.ma) — a promise-tracking app that uses KKI to anchor informal debts to real purchasing power
+Published by The Tech Bay. Originally developed through the Karama project.
+
+Optional consumer: the [Karama](https://karama.thebay.ma) app uses KKI for inflation anchoring. Journalists and researchers can use the [public landing](https://khobz-index.thebay.ma/) and [data archive](data/README.md) without the app.
 
 ---
 
@@ -176,4 +194,4 @@ This project follows the [Contributor Covenant v2.1](CODE_OF_CONDUCT.md).
 
 ---
 
-*KKI v1.0 — Pre-publication. First historical dataset targeting Phase 1.5 launch.*
+*KKI v1.0 — methodology and landing at [khobz-index.thebay.ma](https://khobz-index.thebay.ma/). Data archive: [GitHub Releases](https://github.com/The-Tech-Bay/khobz-index/releases).*

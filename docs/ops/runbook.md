@@ -2,11 +2,25 @@
 
 Canonical architecture: [`../architecture/architecture.md`](../architecture/architecture.md) (pipeline DAG, storage, observability, WAF §5–§6).
 
-**Production URLs (MVP / free tier defaults)**  
-Replace with your account’s hostnames after `wrangler deploy` / `wrangler pages deploy`:
+## Public production URLs (v1)
 
-- **API:** `https://khobz-index-api.smail-elboukfaoui.workers.dev`
-- **Landing (Pages):** `https://khobz-index-landing.pages.dev` (custom domain `karama.thebay.ma/khobz` deferred — see §8)
+| Surface | URL | Notes |
+|---------|-----|--------|
+| **Landing (canonical)** | [https://khobz-index.thebay.ma/](https://khobz-index.thebay.ma/) | Cloudflare Pages project `khobz-index-landing` |
+| **Scientific alias** | [https://kilocalorie-index.thebay.ma/](https://kilocalorie-index.thebay.ma/) | **301** → canonical (Pages `functions/_middleware.ts`) |
+| **Data archive** | GitHub Releases | See [`data/README.md`](../../data/README.md) |
+
+**Legacy (D4-B):** `https://karama.thebay.ma/khobz` is **not** a canonical or redirect target — hard cutover.
+
+**Ops preview only:** `https://khobz-index-landing.pages.dev` — deploy verification; do not use in public copy.
+
+## Internal operator URLs (not public v1 API)
+
+| Surface | URL / location |
+|---------|----------------|
+| **KKI Worker (closed API)** | `https://khobz-index-api.<your-subdomain>.workers.dev` — set in Cloudflare dashboard after deploy; Track A upstream + `/health` probes only |
+| **Pages deploy** | `wrangler pages deploy dist` from `landing/` (includes Functions middleware) |
+| **GitHub Actions secrets** | Parent monorepo (folder containing `khobz-index/`) — Settings → Secrets |
 
 **Cloudflare Resources**
 
@@ -17,11 +31,11 @@ Replace with your account’s hostnames after `wrangler deploy` / `wrangler page
 | KV Namespace | `KKI_KV` (`98ddd13ae32647dd92d253c6f1144676`) |
 | KV Cache | `KKI_CACHE` (`047e5d19798441e2af794ab6d1001c02`) |
 
-**GitHub Actions Secrets** (repo: `i-bkf/karama`)
+**GitHub Actions Secrets** (parent monorepo)
 
 | Secret | Purpose |
 |--------|---------|
-| `CLOUDFLARE_API_TOKEN` | R2 sync, KV update |
+| `CLOUDFLARE_API_TOKEN` | R2 sync, KV update, Pages deploy |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account |
 | `KKI_KV_NAMESPACE_ID` | Workers KV pipeline status |
 | `GITHUB_TOKEN` | Auto-provided for releases |
@@ -31,6 +45,8 @@ Replace with your account’s hostnames after `wrangler deploy` / `wrangler page
 **Public cadence wording:** KKI refreshes source checks weekly and publishes canonical country records at monthly grain (see [`../architecture/architecture.md`](../architecture/architecture.md) §TL;DR).
 
 ---
+
+> **Releasing?** For the ordered, repeatable monthly publication steps see [`public-release-checklist.md`](./public-release-checklist.md). This runbook holds the detailed deploy/rollback/incident procedures it references.
 
 ## 1. Deploy
 
@@ -118,7 +134,8 @@ cd khobz-index
 bun run pipeline:rebuild-fixture
 bun run pages:shard    # optional if pipeline already wrote shards
 bun run pages:build
-bun run pages:deploy
+bun run pages:deploy   # deploys from landing/ (dist + functions/)
+bash scripts/verify-landing-urls.sh
 ```
 
 `pipeline:rebuild-fixture` merges all `build/khobz-index-YYYY-MM.json` rollups, applies the CPI replacement pass for pre-local `global_only` months, enriches the latest month with FAOSTAT basket line items, and writes both `landing/src/data/fixture-snapshot.json` and sharded public fixture files.
@@ -229,9 +246,17 @@ You still see `GlobalTrackMismatch` if a **prior** artefact truly disagrees—fo
 
 After rotation: **`bun run deploy:api`** if Worker secrets changed.
 
-### 8.1 Custom domain (later)
+### 8.1 Custom domains (Phase 4 — complete)
 
-When `thebay.ma` is on Cloudflare: attach **Custom domain** to Pages project; route **`/khobz`** may require **reverse proxy** or path on **same Pages project** — plan with your DNS (`CNAME` / `A` records).
+| Host | Role | Implementation |
+|------|------|----------------|
+| `khobz-index.thebay.ma` | **Canonical** public landing | Pages custom domain on `khobz-index-landing` |
+| `kilocalorie-index.thebay.ma` | Scientific alias | **301 redirect** to canonical via [`landing/functions/_middleware.ts`](../../landing/functions/_middleware.ts) |
+| `karama.thebay.ma/khobz` | Legacy | **Hard cutover (D4-B)** — not maintained; no redirect to KKI |
+
+Verify after deploy: `bash scripts/verify-landing-urls.sh`
+
+Alternative (zone-level): Cloudflare **Redirect Rules** on `thebay.ma` if Pages middleware is removed — prefer middleware for path preservation in-repo.
 
 ---
 
@@ -255,8 +280,8 @@ Automated **>5% / >20% error** thresholds need **Workers Analytics Engine**, Log
 
 **UptimeRobot** (free tier — verify current limits on [uptimerobot.com](https://uptimerobot.com)):
 
-1. Add monitor: **HTTP(s)** → `GET` **API** `/health` every **5 minutes**; expect **200**.
-2. Add monitor: **HTTP(s)** → **Pages** root every **15 minutes**; expect **200**.
+1. Add monitor: **HTTP(s)** → `GET` **internal API** `/health` every **5 minutes**; expect **200** (Worker URL in internal table above).
+2. Add monitor: **HTTP(s)** → **`https://khobz-index.thebay.ma/`** every **15 minutes**; expect **200**.
 3. **Alert contacts:** email; set threshold **3 failures** (~15 min) = critical.
 
 **Test alert:** pause Worker or point monitor to bad URL → confirm email.
@@ -284,4 +309,4 @@ Documented output: [`first-run-2026-05-11.md`](./first-run-2026-05-11.md) (local
 
 ---
 
-*Last updated: 2026-05-13 — global-track mismatch guard (canonical hash).*
+*Last updated: 2026-05-28 — Phase 4 domain wiring (public vs internal URLs, kilocalorie redirect middleware).*

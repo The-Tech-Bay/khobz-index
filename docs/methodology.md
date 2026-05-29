@@ -22,6 +22,8 @@ investment product, wallet, or lending app. The current public release is data,
 methodology, and static archive material; the running API remains private/internal
 for v1.
 
+**Public landing:** [https://khobz-index.thebay.ma/](https://khobz-index.thebay.ma/)
+
 ### 1.1 Naming
 
 - **Public name:** **Karama Khobz Index (KKI)**.
@@ -230,7 +232,7 @@ silently overwritten or recalculated under a newer methodology.
 
 ## 9. Further Reading
 
-- Long-form methodology research: [`docs/kki/kki_research.md`](../../../docs/kki/kki_research.md)
-- Data quality supplement: [`docs/kki/kki-data-quality.md`](../../../docs/kki/kki-data-quality.md)
+- Long-form methodology research: [`docs/kki/kki_research.md`](./kki/kki_research.md)
+- Data quality supplement: [`docs/kki/kki-data-quality.md`](./kki/kki-data-quality.md)
 - Data schema: [`docs/architecture/data-schema.md`](./architecture/data-schema.md)
 - Pipeline stack: [`docs/architecture/stack.md`](./architecture/stack.md)

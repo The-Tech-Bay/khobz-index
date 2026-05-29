@@ -5,6 +5,8 @@ import { interpolateRgbBasis } from "d3-interpolate";
 import type { MapProjectionConfig } from "./RegionPicker";
 import { PreviewSheet } from "./PreviewSheet";
 import { useTouchDevice } from "../hooks/useTouchDevice";
+import { recordsForColorScale } from "../lib/rankingFilters";
+import { qualityShortLabel } from "../lib/localCoverage";
 import styles from "./WorldMap.module.css";
 
 const MapChart = lazy(() => import("./MapChart"));
@@ -28,7 +30,8 @@ const COLOR_RANGE = ["#3E9470", "#56AB87", "#E5AB4F", "#C57A1F", "#C53434"];
 
 export function useKkiColorScale(records: Record<string, MapRecord>) {
   return useMemo(() => {
-    const values = Object.values(records).map((r) => r.kki_value_usd);
+    const scaledRecords = recordsForColorScale(records);
+    const values = Object.values(scaledRecords).map((r) => r.kki_value_usd);
     if (values.length === 0) return { scale: () => "#EBE3D6", min: 0, max: 1 };
     const min = Math.min(...values);
     const max = Math.max(...values);
@@ -158,7 +161,9 @@ export function WorldMap({ records, selectedMonth, projectionConfig }: Props) {
             ≈ ${tooltip.record.kki_value_usd.toFixed(2)} USD
           </span>
           {tooltip.record.quality !== "full" && (
-            <span className={styles.tooltipQuality}>{tooltip.record.quality}</span>
+            <span className={styles.tooltipQuality} data-quality={tooltip.record.quality}>
+              {qualityShortLabel(tooltip.record.quality)}
+            </span>
           )}
         </div>
       ) : null}
@@ -173,7 +178,7 @@ export function WorldMap({ records, selectedMonth, projectionConfig }: Props) {
         </span>
       </div>
       <div className={styles.legendCaption}>
-        Daily cost of staple calories in USD (lower = more affordable)
+        Daily cost in USD for countries with local basket coverage. Pale areas use global fallback estimates.
       </div>
 
       {isTouch ? (

@@ -5,6 +5,10 @@
 
 import { getBasketForCountry } from '../../engine/basket.js';
 import { getAlpha, getCurrency, getMarketType } from '../../engine/hybrid.js';
+import {
+  computeLocalCoverageSummary,
+  type LocalCoverageSummary,
+} from '../../engine/local-coverage.js';
 import { getRegionForCountry } from '../../shared/countries.js';
 import type {
   CommodityPrice,
@@ -55,6 +59,8 @@ export interface LandingFixtureQualityFlags {
   global_only: boolean;
 }
 
+export type LandingFixtureLocalCoverage = LocalCoverageSummary;
+
 export interface LandingFixtureCountryData {
   name: string;
   currency: string;
@@ -69,6 +75,7 @@ export interface LandingFixtureCountryData {
     prices: LandingFixtureCommodityPrice[];
     global_track: LandingFixtureGlobalTrackMini;
     quality_flags: LandingFixtureQualityFlags;
+    local_coverage: LandingFixtureLocalCoverage;
   };
 }
 
@@ -143,7 +150,9 @@ export function buildCountryDiagnostics(
     : undefined;
   const spliceGapPct =
     observed && estimated && estimated.kki_value > 0
-      ? Number((((observed.kki_value - estimated.kki_value) / estimated.kki_value) * 100).toFixed(1))
+      ? Number(
+          (((observed.kki_value - estimated.kki_value) / estimated.kki_value) * 100).toFixed(1),
+        )
       : null;
 
   const methodCounts = new Map<string, number>();
@@ -204,6 +213,7 @@ export function buildLandingFixtureData(args: {
       basket_version = 'unknown-v1';
     }
 
+    const emptyCoverage = emptyLocalCoverage(ccUpper, args.methodology_version);
     const countryPayload: LandingFixtureCountryData = {
       name: countryDisplayName(ccUpper),
       currency: getCurrency(ccUpper),
@@ -223,6 +233,7 @@ export function buildLandingFixtureData(args: {
           stale_gold: Boolean(lastRow?.staleGold),
           global_only: lastRow?.record.quality === 'global_only',
         },
+        local_coverage: emptyCoverage,
       },
     };
 
@@ -244,7 +255,8 @@ export function buildLandingFixtureData(args: {
     }
 
     if (lastRow) {
-      const basketItems = getBasketForCountry(ccUpper, args.methodology_version).items;
+      const basket = getBasketForCountry(ccUpper, args.methodology_version);
+      const basketItems = basket.items;
       const weightByCode = new Map(basketItems.map((it) => [it.commodity_code, it.weight]));
       countryPayload.latest_snapshot = {
         snapshot_date: `${lastMonth}-15`,
@@ -265,6 +277,7 @@ export function buildLandingFixtureData(args: {
           stale_gold: lastRow.staleGold,
           global_only: lastRow.record.quality === 'global_only',
         },
+        local_coverage: computeLocalCoverageSummary(basket, lastRow.commodityPrices),
       };
     }
 
@@ -278,6 +291,22 @@ export function buildLandingFixtureData(args: {
     months: sortedMonths,
     countries,
   };
+}
+
+function emptyLocalCoverage(countryCode: string, methodologyVersion: string): LocalCoverageSummary {
+  try {
+    const basket = getBasketForCountry(countryCode, methodologyVersion);
+    return computeLocalCoverageSummary(basket, []);
+  } catch {
+    return {
+      items_expected: 0,
+      items_priced: 0,
+      weight_covered: 0,
+      threshold: 0.6,
+      local_leg_accepted: false,
+      missing_high_weight: [],
+    };
+  }
 }
 
 function staleInterpolated(row: CountryMonthlyPipelineRow): string[] {

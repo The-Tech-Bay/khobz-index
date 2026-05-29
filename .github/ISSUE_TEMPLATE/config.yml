@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Basket proposal
+    url: https://github.com/The-Tech-Bay/khobz-index/issues/new?template=basket_proposal.md
+    about: Propose a new regional staple basket or basket revision
+  - name: Source correction
+    url: https://github.com/The-Tech-Bay/khobz-index/issues/new?template=source_correction.md
+    about: Report incorrect published KKI values or source-data errors
+  - name: Security vulnerability
+    url: https://github.com/The-Tech-Bay/khobz-index/blob/main/SECURITY.md
+    about: Report security issues privately (do not open a public issue)

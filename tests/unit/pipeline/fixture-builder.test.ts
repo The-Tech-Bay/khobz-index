@@ -1,5 +1,9 @@
 import { describe, expect, test } from 'bun:test';
-import { buildCountryDiagnostics, type CountryMonthlyPipelineRow } from '../../../src/pipeline/lib/fixture-builder.js';
+import {
+  buildCountryDiagnostics,
+  buildLandingFixtureData,
+  type CountryMonthlyPipelineRow,
+} from '../../../src/pipeline/lib/fixture-builder.js';
 import type { IndexRecord } from '../../../src/shared/schema.js';
 
 const baseRecord: IndexRecord = {
@@ -78,5 +82,43 @@ describe('landing fixture diagnostics', () => {
     expect(diagnostics.splice_gap_pct).toBe(25);
     expect(diagnostics.dominant_estimate_method).toBe('headline_cpi_chained');
     expect(diagnostics.has_annual_cpi_history).toBe(true);
+  });
+
+  test('latest_snapshot includes local_coverage summary', () => {
+    const payload = buildLandingFixtureData({
+      schema_version: '1.0',
+      methodology_version: '1.0.0',
+      generated_at: '2026-05-27T00:00:00.000Z',
+      fixtureMonths: ['2026-04'],
+      byCountryMonth: new Map([
+        [
+          'MA',
+          new Map([
+            [
+              '2026-04',
+              {
+                ...row(baseRecord),
+                commodityPrices: [
+                  {
+                    commodity_code: '23112',
+                    commodity_name: 'Wheat flour',
+                    price_local: 5,
+                    currency: 'MAD',
+                    price_usd: 0.5,
+                    source_id: 'faostat',
+                    source_tier: 1,
+                  },
+                ],
+              },
+            ],
+          ]),
+        ],
+      ]),
+    });
+
+    const snapshot = payload.countries.MA?.latest_snapshot;
+    expect(snapshot?.local_coverage).toBeDefined();
+    expect(snapshot?.local_coverage.items_expected).toBeGreaterThan(0);
+    expect(snapshot?.local_coverage.threshold).toBe(0.6);
   });
 });

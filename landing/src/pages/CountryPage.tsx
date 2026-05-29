@@ -24,6 +24,14 @@ import {
   type ChartConfidence,
   type ChartMode,
 } from "../lib/countryChartSemantics";
+import {
+  basketSectionTitle,
+  coverageSummaryText,
+  formatWeightPct,
+  getLocalCoverage,
+  qualityLabel,
+  usMoroccoSanityNote,
+} from "../lib/localCoverage";
 import styles from "./CountryPage.module.css";
 
 const REGION_NAMES: Record<string, string> = {
@@ -48,7 +56,7 @@ const BASKET_NICKNAMES: Record<string, string> = {
 
 function QualityBadge({ quality }: { quality: string }) {
   const cls = quality === "full" ? styles.badgeFull : quality === "degraded" ? styles.badgeDegraded : styles.badgeGlobalOnly;
-  return <span className={cls}>{quality}</span>;
+  return <span className={cls}>{qualityLabel(quality)}</span>;
 }
 
 type Timeframe = "all" | "1y" | "5y" | "10y" | "since1990";
@@ -185,6 +193,9 @@ export function CountryPage() {
     chartData.some((p) => p[key] !== null),
   );
   const spliceLabel = spliceGapLabel(diagnostics?.splice_gap_pct);
+  const localCoverage = getLocalCoverage(country);
+  const sanityNote = code ? usMoroccoSanityNote(code) : null;
+  const basketTitle = latestRecord ? basketSectionTitle(latestRecord.quality) : "Latest basket breakdown";
 
   return (
     <div className={styles.page}>
@@ -231,6 +242,24 @@ export function CountryPage() {
           <span className={styles.metaItem}>
             {formatMonth(latestMonth)}
           </span>
+        </div>
+      )}
+
+      {latestRecord && (
+        <div className={styles.coverageCallout} data-quality={latestRecord.quality}>
+          <strong>Local basket coverage:</strong> {coverageSummaryText(localCoverage)}
+          {latestRecord.quality === "global_only" && latestRecord.local_basket_cost === 0 && (
+            <span className={styles.coverageSub}>
+              {" "}
+              The local leg is 0 because coverage failed the threshold — not because food is free.
+            </span>
+          )}
+        </div>
+      )}
+
+      {sanityNote && (
+        <div className={styles.sanityNote}>
+          <strong>Validation note:</strong> {sanityNote}
         </div>
       )}
 
@@ -344,10 +373,21 @@ export function CountryPage() {
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Latest observed basket breakdown</h2>
+        <h2 className={styles.sectionTitle}>{basketTitle}</h2>
         <p className={styles.sectionNote}>
-          Commodity rows describe the latest observed line-item data. Historical CPI estimates use
-          inflation proxies and do not imply historical item-level prices.
+          Commodity rows describe the latest line-item data available for this month. Historical CPI
+          estimates use inflation proxies and do not imply historical item-level prices.
+          {localCoverage.missing_high_weight.length > 0 && (
+            <>
+              {" "}
+              Missing high-weight items:{" "}
+              {localCoverage.missing_high_weight
+                .slice(0, 3)
+                .map((m) => `${m.commodity_name} (${formatWeightPct(m.weight)})`)
+                .join(", ")}
+              .
+            </>
+          )}
         </p>
         {latestRecord && (
           <div className={styles.splitGrid}>
@@ -443,7 +483,9 @@ export function CountryPage() {
             )}
             {snapshot.quality_flags.stale_gold && <li>Gold price is stale (cached)</li>}
             {snapshot.quality_flags.global_only && (
-              <li>Global-only mode: no local market data available</li>
+              <li>
+                Global fallback only: local leg suppressed ({coverageSummaryText(localCoverage)})
+              </li>
             )}
             {snapshot.quality_flags.interpolated.length > 0 && (
               <li>

@@ -6,7 +6,10 @@ import {
 
 describe('fetch-historical-cpi envelope builder', () => {
   test('maps World Bank rows into validated CPI observations', () => {
-    const iso3ToIso2 = new Map([['MAR', 'MA'], ['FRA', 'FR']]);
+    const iso3ToIso2 = new Map([
+      ['MAR', 'MA'],
+      ['FRA', 'FR'],
+    ]);
     const allowedIso2 = new Set(['MA', 'FR']);
 
     const envelope = buildHistoricalCpiEnvelope({
@@ -29,9 +32,9 @@ describe('fetch-historical-cpi envelope builder', () => {
     });
 
     expect(envelope.observations.length).toBe(3);
-    expect(envelope.observations.some((o) => o.country_code === 'MA' && o.kind === 'food_cpi')).toBe(
-      true,
-    );
+    expect(
+      envelope.observations.some((o) => o.country_code === 'MA' && o.kind === 'food_cpi'),
+    ).toBe(true);
     expect(
       envelope.observations.some((o) => o.country_code === 'FR' && o.kind === 'headline_cpi'),
     ).toBe(true);

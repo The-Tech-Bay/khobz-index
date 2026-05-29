@@ -49,11 +49,12 @@ export function SalaryCalculator() {
     <section className={styles.section} aria-label="Salary purchasing power calculator">
       <div className={styles.card}>
         <div className={styles.copy}>
-          <span className={styles.eyebrow}>Old money calculator</span>
-          <h2 className={styles.title}>What was that salary worth in today’s food purchasing power?</h2>
+          <span className={styles.eyebrow}>Purchasing power calculator</span>
+          <h2 className={styles.title}>What was that amount worth in today’s staple food purchasing power?</h2>
           <p className={styles.subtitle}>
-            Convert an old amount into today’s local purchasing-power equivalent using
-            KK units. Historical estimates are labelled by source confidence.
+            Convert a historical local-currency amount into today’s KK-equivalent
+            purchasing power. CPI-chained and observed months are labelled separately —
+            annual CPI does not imply monthly item-level precision.
           </p>
         </div>
 

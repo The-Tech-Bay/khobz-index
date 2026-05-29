@@ -27,6 +27,16 @@ Thank you for your interest in contributing. KKI is an open methodology and open
 2. Include: region, proposed items, caloric calculation, data source availability
 3. The BDFL will review and may request a sensitivity analysis before merging
 
+### Source / data corrections
+
+If a **published** KKI value or source attribution is wrong (not a security issue):
+
+1. Open an Issue using the **Source correction** template
+2. Include country, month, expected vs actual, and links to authoritative source data
+3. Corrections are published alongside originals — never silent overwrites (see Versioned Methodology Discipline below)
+
+For security vulnerabilities, see [SECURITY.md](SECURITY.md) — do **not** use a public Issue.
+
 ### Source adapter contributions
 
 1. Open an Issue describing the new data source

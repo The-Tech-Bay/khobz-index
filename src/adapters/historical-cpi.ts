@@ -60,8 +60,6 @@ export function findCpiObservation(
   const ym = targetMonth.slice(0, 7);
   const yyyy = ym.slice(0, 4);
   return (
-    observations.find((o) => o.period === ym) ??
-    observations.find((o) => o.period === yyyy) ??
-    null
+    observations.find((o) => o.period === ym) ?? observations.find((o) => o.period === yyyy) ?? null
   );
 }

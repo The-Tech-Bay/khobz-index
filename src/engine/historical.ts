@@ -61,7 +61,10 @@ function lcuPerUsdFromRecord(record: IndexRecord): number | null {
   return record.kki_value / record.kki_value_usd;
 }
 
-function targetGlobalBasketCost(base: IndexRecord, existingTarget: IndexRecord | undefined): number {
+function targetGlobalBasketCost(
+  base: IndexRecord,
+  existingTarget: IndexRecord | undefined,
+): number {
   if (
     existingTarget &&
     Number.isFinite(existingTarget.global_basket_cost) &&
@@ -92,7 +95,9 @@ export async function chainObservedRecordWithCpi(input: CpiChainInput): Promise<
   const targetFx = existingTarget ? lcuPerUsdFromRecord(existingTarget) : null;
   const baseFx = lcuPerUsdFromRecord(base);
   const fx = targetFx ?? baseFx;
-  const kkiValueUsd = Number((fx && fx > 0 ? kkiValue / fx : base.kki_value_usd * ratio).toFixed(3));
+  const kkiValueUsd = Number(
+    (fx && fx > 0 ? kkiValue / fx : base.kki_value_usd * ratio).toFixed(3),
+  );
 
   const partial: Omit<IndexRecord, 'record_hash'> = {
     ...base,

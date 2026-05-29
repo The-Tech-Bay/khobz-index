@@ -15,7 +15,7 @@ export function Layout() {
       <header className={styles.header}>
         <nav className={styles.nav} aria-label="Main navigation">
           <Link to="/" className={styles.logo}>
-            <span className={styles.logoK}>K</span>hobz Index
+            <span className={styles.logoK}>K</span>arama Khobz Index
           </Link>
 
           <div className={styles.navLinks}>
@@ -50,7 +50,7 @@ export function Layout() {
       <footer className={styles.footer}>
         <div className={styles.footerInner}>
           <p className={styles.footerText}>
-            Karama Khobz Index (KKI) — Data licensed{" "}
+            Karama Khobz Index (KKI) — open food-purchasing-power data. Licensed{" "}
             <a
               href="https://creativecommons.org/licenses/by/4.0/"
               target="_blank"

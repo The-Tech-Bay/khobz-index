@@ -7,7 +7,6 @@
  */
 
 import type {
-  BasketVersion,
   CommodityPrice,
   EstimateConfidence,
   EstimateMethod,
@@ -21,6 +20,7 @@ import { IndexRecordSchema } from '../shared/schema.js';
 import { getBasketForCountry } from './basket.js';
 import { computeGlobalBasketCost } from './global-track.js';
 import { computeHybridKKI, getAlpha } from './hybrid.js';
+import { computeLocalBasketCost, LOCAL_BASKET_COVERAGE_THRESHOLD } from './local-coverage.js';
 
 export interface CalculateKKIInput {
   countryCode: string;
@@ -44,56 +44,6 @@ export interface CalculateKKIInput {
 export interface KKIResult {
   record: IndexRecord;
   quality: QualityLevel;
-}
-
-/**
- * Compute the local basket cost as Σ(weight_i × price_local_i) for
- * items whose price is available. Returns the cost and the list of
- * matched/missing commodity codes.
- */
-function computeLocalBasketCost(
-  basket: BasketVersion,
-  prices: CommodityPrice[],
-): {
-  cost: number;
-  matched: string[];
-  missing: string[];
-  adjustedWeights: Map<string, number>;
-  weightCoverageSum: number;
-} {
-  const priceMap = new Map<string, CommodityPrice>();
-  for (const p of prices) {
-    priceMap.set(p.commodity_code, p);
-  }
-
-  const matched: string[] = [];
-  const missing: string[] = [];
-  /** Sum of nominal basket weights for items whose price exists (coverage before local re-normalisation — §pipeline D6 threshold). */
-  let weightCoverageSum = 0;
-
-  for (const item of basket.items) {
-    if (priceMap.has(item.commodity_code)) {
-      matched.push(item.commodity_code);
-      weightCoverageSum += item.weight;
-    } else {
-      missing.push(item.commodity_code);
-    }
-  }
-
-  const adjustedWeights = new Map<string, number>();
-  let cost = 0;
-
-  for (const item of basket.items) {
-    const price = priceMap.get(item.commodity_code);
-    if (!price) continue;
-
-    // Re-normalise weights so available items sum to 1.0 (degraded mode)
-    const adjustedWeight = weightCoverageSum > 0 ? item.weight / weightCoverageSum : 0;
-    adjustedWeights.set(item.commodity_code, adjustedWeight);
-    cost += adjustedWeight * price.price_local;
-  }
-
-  return { cost, matched, missing, adjustedWeights, weightCoverageSum };
 }
 
 async function computeRecordHash(data: Omit<IndexRecord, 'record_hash'>): Promise<string> {
@@ -137,7 +87,7 @@ export async function calculateKKI(input: CalculateKKIInput): Promise<KKIResult>
   let alpha = getAlpha(cc);
   let quality: QualityLevel = 'full';
 
-  if (local.matched.length === 0 || local.weightCoverageSum < 0.6) {
+  if (local.matched.length === 0 || local.weightCoverageSum < LOCAL_BASKET_COVERAGE_THRESHOLD) {
     alpha = 0;
     quality = 'global_only';
   } else if (local.missing.length > 0) {

@@ -1,3 +1,4 @@
+import { qualityShortLabel } from "../lib/localCoverage";
 import styles from "./PreviewSheet.module.css";
 
 interface MapRecord {
@@ -41,7 +42,7 @@ export function PreviewSheet({ open, record, onExplore }: Props) {
           </p>
           {record.quality !== "full" && (
             <p className={styles.quality} data-quality={record.quality}>
-              {record.quality}
+              {qualityShortLabel(record.quality)}
             </p>
           )}
           <button type="button" className={styles.cta} onClick={onExplore}>

@@ -29,9 +29,11 @@
     "deploy:api:dry-run": "wrangler deploy --dry-run",
     "cf:check": "wrangler deploy --dry-run",
     "pipeline:rebuild-fixture": "bun run scripts/rebuild-fixture-from-build.ts",
+    "pipeline:enrich-fixture-coverage": "bun run scripts/enrich-fixture-local-coverage.ts",
     "pages:shard": "bun run scripts/write-fixture-shards.ts",
     "pages:build": "bun run pages:shard && cd landing && bun install --frozen-lockfile && bun run build",
-    "pages:deploy": "wrangler pages project create khobz-index-landing --production-branch main 2>/dev/null; wrangler pages deploy landing/dist --project-name khobz-index-landing"
+    "pages:deploy": "wrangler pages project create khobz-index-landing --production-branch main 2>/dev/null; cd landing && wrangler pages deploy dist --project-name khobz-index-landing",
+    "pages:verify": "bash scripts/verify-landing-urls.sh"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.0.0",

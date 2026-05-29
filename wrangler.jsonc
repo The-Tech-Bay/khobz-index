@@ -1,5 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
+  // Closed KKI API Worker (Track A + operators only). No public routes or custom API domain for v1.
+  // Public consumers use https://khobz-index.thebay.ma/ + GitHub Releases — not this Worker.
   // After provisioning: paste real KV namespace id from `bash scripts/cf-bootstrap.sh` (see docs/ops/runbook.md §1.2)
   "name": "khobz-index-api",
   "main": "src/api/index.ts",

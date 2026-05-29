@@ -7,10 +7,10 @@
 export function normalizeMapAlpha2(alpha2: string | undefined): string | undefined {
   if (!alpha2) return undefined;
   const upper = alpha2.toUpperCase();
-  if (upper === "EH" || upper === "ESH" || upper === "732") return "MA";
+  if (upper === 'EH' || upper === 'ESH' || upper === '732') return 'MA';
   return upper;
 }
 
 export function isMoroccoTerritoryAlpha2(alpha2: string | undefined): boolean {
-  return normalizeMapAlpha2(alpha2) === "MA";
+  return normalizeMapAlpha2(alpha2) === 'MA';
 }

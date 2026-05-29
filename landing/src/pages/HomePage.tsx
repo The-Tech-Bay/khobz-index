@@ -52,11 +52,11 @@ export function HomePage() {
             <span className={styles.accent}>around the world?</span>
           </h1>
           <p className={styles.subtitle}>
-            The Karama Khobz Index (KKI) measures the cost of one day of staple
-            subsistence calories (~2,200 kcal) using region-appropriate baskets.
-            KKI refreshes source checks weekly and publishes canonical country
-            records at monthly grain. An open, calorie-grounded alternative to the
-            Big Mac Index.
+            The Karama Khobz Index (KKI) is open food-purchasing-power data: the
+            local-currency cost of one day of staple subsistence calories (~2,200 kcal)
+            using region-appropriate baskets. Source checks refresh weekly; canonical
+            country records publish at monthly grain. Rankings emphasize countries with
+            local basket coverage — global-fallback countries share one commodity track.
           </p>
         </div>
       </section>
@@ -111,7 +111,7 @@ export function HomePage() {
               </span>
             ) : null}
           </h2>
-          <CountryRanking records={rankingRecords} />
+          <CountryRanking records={rankingRecords} countries={fixture.countries} />
         </div>
       </section>
     </>

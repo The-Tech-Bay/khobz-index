@@ -37,11 +37,27 @@ export interface QualityFlags {
   global_only: boolean;
 }
 
+export interface MissingBasketItem {
+  commodity_code: string;
+  commodity_name: string;
+  weight: number;
+}
+
+export interface LocalCoverageSummary {
+  items_expected: number;
+  items_priced: number;
+  weight_covered: number;
+  threshold: number;
+  local_leg_accepted: boolean;
+  missing_high_weight: MissingBasketItem[];
+}
+
 export interface CountrySnapshot {
   snapshot_date: string;
   prices: CommodityPrice[];
   global_track: GlobalTrack;
   quality_flags: QualityFlags;
+  local_coverage?: LocalCoverageSummary;
 }
 
 export interface CountryDiagnostics {

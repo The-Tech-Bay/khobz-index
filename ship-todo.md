@@ -405,6 +405,8 @@ Acceptance criteria:
 
 ## Phase 3: Landing Page Copy and Public UX
 
+**Status (2026-05-27):** ✅ Complete — deliverable [`docs/shipping v1/phase3-landing-ux.md`](docs/shipping%20v1/phase3-landing-ux.md). Backup: `landing-backup-pre-phase3-2026-05-27/`.
+
 Goal: make the landing page understandable without Karama app context.
 
 ### Task 3.1: Update SEO and metadata
@@ -469,6 +471,8 @@ Acceptance criteria:
 
 ## Phase 4: Domain Wiring
 
+**Status (2026-05-28):** ✅ Complete — deliverable [`docs/shipping v1/phase4-domain-wiring.md`](docs/shipping%20v1/phase4-domain-wiring.md). Live: `https://khobz-index.thebay.ma/`; scientific alias 301 via Pages middleware; verify: `bash scripts/verify-landing-urls.sh`.
+
 Goal: prepare domain configuration for launch.
 
 ### Task 4.1: Landing domain
@@ -515,6 +519,8 @@ Acceptance criteria:
 - Closed API docs, Karama API upstream, and runbook clearly mark any Worker/API hostname as private/internal.
 
 ## Phase 5: Public GitHub Repo Readiness
+
+**Status (2026-05-28):** ✅ Complete — deliverable [`docs/shipping v1/phase5-public-github-readiness.md`](docs/shipping%20v1/phase5-public-github-readiness.md). Topology links, SECURITY.md, issue templates, README/runbook cleanup, standalone workflow port, export runbook. Actual `git subtree split` deferred to export day.
 
 Goal: make `khobz-index/` safe and credible as a public repo.
 
@@ -606,6 +612,8 @@ Acceptance criteria:
 
 ## Phase 6: Data Publication and Citation
 
+**Status (2026-05-29):** ✅ Complete — deliverable [`docs/shipping v1/phase6-data-publication.md`](docs/shipping%20v1/phase6-data-publication.md). `data/README.md` finalized (canonical monthly grain + neutral The Tech Bay attribution); new [`docs/ops/public-release-checklist.md`](docs/ops/public-release-checklist.md) cross-linked from runbook + README.
+
 Goal: make the public data archive usable by researchers.
 
 ### Task 6.1: Finalize data README
@@ -653,6 +661,8 @@ Acceptance criteria:
 - Release process is repeatable by a new maintainer.
 
 ## Phase 7: Verification
+
+**Status (2026-05-29):** ✅ Complete — deliverable [`docs/shipping v1/phase7-verification.md`](docs/shipping%20v1/phase7-verification.md). Gate green: typecheck, lint, format:check, **147 unit tests**, and `pages:build` all pass; stale-domain and prohibited-language sweeps clean; Addendum UX work confirmed shipped. Remediation: formatted 15 in-flight files, excluded generated fixture data from Biome (stabilizes the `pages:build → format:check` cycle), fixed 2 overshooting doc links. One cross-repo README link flagged for the Phase 5 export runbook.
 
 Run after implementation:
 

@@ -1,4 +1,4 @@
-import type { CountryRecord } from "../types";
+import type { CountryRecord } from '../types';
 
 export interface ResolvedKkiPoint {
   month: string;
@@ -50,29 +50,32 @@ function annualAveragePoint(
       kki_value_usd: (representative.kki_value_usd / representative.kki_value) * avg,
       local_basket_cost: (representative.local_basket_cost / representative.kki_value) * avg,
       global_basket_cost: (representative.global_basket_cost / representative.kki_value) * avg,
-      source_periodicity: "annual",
+      source_periodicity: 'annual',
     },
-    method: representative.estimate_method ?? "observed",
-    confidence: representative.estimate_confidence ?? "observed",
-    sourcePeriodicity: "annual",
+    method: representative.estimate_method ?? 'observed',
+    confidence: representative.estimate_confidence ?? 'observed',
+    sourcePeriodicity: 'annual',
     note: `Annual average KKI for ${year}.`,
   };
 }
 
-function observedPoint(records: Record<string, CountryRecord>, month: string): ResolvedKkiPoint | null {
+function observedPoint(
+  records: Record<string, CountryRecord>,
+  month: string,
+): ResolvedKkiPoint | null {
   const normalized = normalizeMonth(month);
   const exact = records[normalized];
   if (exact) {
     return {
       month: normalized,
       record: exact,
-      method: exact.estimate_method ?? "observed",
-      confidence: exact.estimate_confidence ?? "observed",
-      sourcePeriodicity: exact.source_periodicity ?? "monthly",
+      method: exact.estimate_method ?? 'observed',
+      confidence: exact.estimate_confidence ?? 'observed',
+      sourcePeriodicity: exact.source_periodicity ?? 'monthly',
       note:
-        exact.estimate_method && exact.estimate_method !== "observed"
-          ? `Archive ${exact.estimate_method.replace(/_/g, " ")} estimate.`
-          : "Observed KKI archive value.",
+        exact.estimate_method && exact.estimate_method !== 'observed'
+          ? `Archive ${exact.estimate_method.replace(/_/g, ' ')} estimate.`
+          : 'Observed KKI archive value.',
     };
   }
 
@@ -87,10 +90,10 @@ function observedPoint(records: Record<string, CountryRecord>, month: string): R
   return {
     month: nearest,
     record: rec,
-    method: rec.estimate_method ?? "observed",
-    confidence: rec.estimate_confidence ?? "observed",
-    sourcePeriodicity: rec.source_periodicity ?? "monthly",
-    note: "Nearest earlier KKI archive value.",
+    method: rec.estimate_method ?? 'observed',
+    confidence: rec.estimate_confidence ?? 'observed',
+    sourcePeriodicity: rec.source_periodicity ?? 'monthly',
+    note: 'Nearest earlier KKI archive value.',
   };
 }
 
@@ -101,16 +104,16 @@ function cpiChainedYearPoint(
   const chained = Object.entries(records).find(
     ([m, rec]) =>
       m.startsWith(`${year}-`) &&
-      (rec.estimate_method === "cpi_chained" || rec.estimate_method === "headline_cpi_chained"),
+      (rec.estimate_method === 'cpi_chained' || rec.estimate_method === 'headline_cpi_chained'),
   );
   if (!chained) return null;
   const [, record] = chained;
   return {
     month: `${year}-AVG`,
     record,
-    method: record.estimate_method ?? "headline_cpi_chained",
-    confidence: record.estimate_confidence ?? "low",
-    sourcePeriodicity: record.source_periodicity ?? "annual",
+    method: record.estimate_method ?? 'headline_cpi_chained',
+    confidence: record.estimate_confidence ?? 'low',
+    sourcePeriodicity: record.source_periodicity ?? 'annual',
     note: `CPI-chained KKI estimate for ${year}.`,
   };
 }

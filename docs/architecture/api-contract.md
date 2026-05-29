@@ -36,13 +36,13 @@
 
 **Explicit rule:** Any request to a data endpoint **without** a valid KKI access token MUST receive **401** with body [`ErrorResponse`](#6-error-response-schema) and `error.code: unauthorized`. There is **no** public read key, API key, or IP allowlist bypass for data at MVP.
 
-**Public data path:** Journalists, researchers, and the static landing page (`karama.thebay.ma/khobz`) consume **[§7 Static archive contract](#7-static-archive-contract)** only — same pattern as Big Mac open data, zero anonymous load on running API ([`kki_research.md`](../../../docs/kki/kki_research.md) §7.2).
+**Public data path:** Journalists, researchers, and the static landing page (`https://khobz-index.thebay.ma/`) consume **[§7 Static archive contract](#7-static-archive-contract)** only — same pattern as Big Mac open data, zero anonymous load on running API ([`kki_research.md`](../../../docs/kki/kki_research.md) §7.2). **Do not publish** the Worker hostname in public docs; operators see internal URLs in [`runbook.md`](../ops/runbook.md).
 
 ---
 
 ## 2. Endpoint catalogue
 
-Base path: implementation MAY mount under `/` on a dedicated worker hostname (e.g. `kki-api.<account>.workers.dev`). Spec paths below are **relative** to that origin.
+Base path: implementation mounts under `/` on a **private** Cloudflare Worker hostname (internal operators + Track A only). Spec paths below are **relative** to that origin. **No public API URL** is published for v1.
 
 Content type for JSON: `application/json; charset=utf-8`.
 
@@ -359,9 +359,9 @@ Encoding: **UTF-8**, no BOM. CSV: POSIX `.` decimal separator.
 
 URL pattern (Wayback “all captures” for the release asset):
 
-`https://web.archive.org/web/*/https://github.com/<org>/<repo>/releases/download/khobz-index-YYYY-MM/khobz-index-YYYY-MM.json`
+`https://web.archive.org/web/*/https://github.com/The-Tech-Bay/khobz-index/releases/download/khobz-index-YYYY-MM/khobz-index-YYYY-MM.json`
 
-Replace `<org>/<repo>` with the canonical public repo (e.g. `The-Tech-Bay/khobz-index` post-launch).
+Canonical public repo: [The-Tech-Bay/khobz-index](https://github.com/The-Tech-Bay/khobz-index).
 
 ---
 

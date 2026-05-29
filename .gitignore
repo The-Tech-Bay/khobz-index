@@ -25,3 +25,6 @@ Thumbs.db
 
 # Large generated FAOSTAT backfill (re-created by `bun run pipeline:prefetch`)
 data/reference/faostat-pp-backfill.json
+
+# Local landing backup (Phase 3 rollback artifact — not for publication)
+landing-backup-pre-phase3-2026-05-27/

@@ -20,7 +20,11 @@ const DEFAULT_PROJECTION: MapProjectionConfig = {
 
 const NO_DATA_COLOR_LIGHT = "#EBE3D6";
 const NO_DATA_COLOR_DARK = "#2C3038";
+const GLOBAL_ONLY_FILL_LIGHT = "#C8DECE";
+const GLOBAL_ONLY_FILL_DARK = "#2E4038";
 const HOVER_FILL = "#DDD0BD";
+
+const EXCLUDED_ISO_NUMERIC = new Set(["010"]);
 
 interface MapRecord {
   code: string;
@@ -109,6 +113,8 @@ function MapChart({
     [projectionConfig.center, projectionConfig.scale],
   );
 
+  const globalOnlyFill = isDark ? GLOBAL_ONLY_FILL_DARK : GLOBAL_ONLY_FILL_LIGHT;
+
   return (
     <ComposableMap
       projectionConfig={mergedProjection}
@@ -131,7 +137,9 @@ function MapChart({
       <ZoomableGroup>
         <Geographies geography={GEO_DATA}>
           {({ geographies }) =>
-            geographies.map((geo) => {
+            geographies
+            .filter((geo) => !EXCLUDED_ISO_NUMERIC.has(geo.id as string))
+            .map((geo) => {
               const alpha2 = getAlpha2(geo);
               const record = alpha2 ? records[alpha2] : undefined;
               const seq = colorScale as ScaleSequential<string>;
@@ -143,11 +151,14 @@ function MapChart({
                 alpha2.toUpperCase() === hoveredUpper &&
                 Boolean(record);
 
+              const isGlobalOnly = record?.quality === "global_only";
               const fill =
                 isHovered
                   ? HOVER_FILL
                   : record !== undefined
-                    ? seq(record.kki_value_usd)
+                    ? isGlobalOnly
+                      ? globalOnlyFill
+                      : seq(record.kki_value_usd)
                     : noDataColor;
 
               const isSelected =
@@ -176,7 +187,7 @@ function MapChart({
                   aria-pressed={isSelected ? true : undefined}
                   aria-label={
                     record !== undefined && alpha2 !== undefined
-                      ? `${record.name}: ${record.kki_value.toFixed(2)} ${record.currency} per KK`
+                      ? `${record.name}: ${record.kki_value.toFixed(2)} ${record.currency} per KK (${record.quality === "global_only" ? "global fallback" : record.quality})`
                       : undefined
                   }
                   onMouseMove={(e: React.MouseEvent) => {

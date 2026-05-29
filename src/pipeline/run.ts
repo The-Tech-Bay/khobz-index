@@ -16,12 +16,7 @@ import { computeGlobalBasketCost } from '../engine/global-track.js';
 import { getCurrency } from '../engine/hybrid.js';
 import { calculateKKI } from '../engine/index.js';
 import { COUNTRY_TO_REGION } from '../shared/countries.js';
-import type {
-  FetchParams,
-  GlobalTrack,
-  IndexRecord,
-  PriceRecord,
-} from '../shared/schema.js';
+import type { FetchParams, GlobalTrack, IndexRecord, PriceRecord } from '../shared/schema.js';
 import {
   buildCountrySnapshotMinimal,
   buildOfflineApkBundle,
@@ -34,7 +29,11 @@ import { loadMonthlyBenchmarkCsv } from './lib/benchmark-csv.js';
 import { priceRecordsToBasketCommodityPrices, tierForSourceId } from './lib/commodity-prices.js';
 import { buildLandingFixtureData, type CountryMonthlyPipelineRow } from './lib/fixture-builder.js';
 import { writeLandingFixtureShards } from './lib/fixture-shards.js';
-import { backfillHistoricalRecords, hasLocalKkiData, historicalTargetMonths } from './lib/historical-backfill.js';
+import {
+  backfillHistoricalRecords,
+  hasLocalKkiData,
+  historicalTargetMonths,
+} from './lib/historical-backfill.js';
 import { lcuPerUsdFromFxRecords } from './lib/fx-utils.js';
 import { assembleGlobalTrackForMonth } from './lib/global-track-assemble.js';
 import {
@@ -274,7 +273,10 @@ async function main(): Promise<void> {
     lastFxSlot = await orch.fetchSlot({ target_date: `${month}-15` }, 'fx_display');
     if (!lastFxSlot.ok) {
       // biome-ignore lint/suspicious/noConsole: CLI
-      console.error('[pipeline] FX slot failed (Frankfurter + exchangerate.host)', lastFxSlot.errors);
+      console.error(
+        '[pipeline] FX slot failed (Frankfurter + exchangerate.host)',
+        lastFxSlot.errors,
+      );
       process.exit(1);
     }
     const fullFxMap = lcuPerUsdFromFxRecords(lastFxSlot.records);
@@ -496,9 +498,7 @@ async function main(): Promise<void> {
       const observedMap = fixtureRows.get(ccU) ?? new Map<string, CountryMonthlyPipelineRow>();
       const backfill = await backfillHistoricalRecords({
         countryCode: ccU,
-        observedByMonth: new Map(
-          [...observedMap.entries()].map(([m, row]) => [m, row.record]),
-        ),
+        observedByMonth: new Map([...observedMap.entries()].map(([m, row]) => [m, row.record])),
         targetMonths: historicalMonths,
         cpiEnvelope,
         computedAt: nowIso,

@@ -1,8 +1,8 @@
-import type { HistoricalCpiEnvelope, HistoricalCpiObservation } from '../../adapters/historical-cpi.js';
-import {
-  findCpiObservation,
-  observationsForCountry,
+import type {
+  HistoricalCpiEnvelope,
+  HistoricalCpiObservation,
 } from '../../adapters/historical-cpi.js';
+import { findCpiObservation, observationsForCountry } from '../../adapters/historical-cpi.js';
 import { chainObservedRecordWithCpi } from '../../engine/historical.js';
 import type { IndexRecord, SourcePeriodicity } from '../../shared/schema.js';
 import { expandInclusiveMonths } from './month-utils.js';
@@ -79,9 +79,7 @@ export function shouldCpiReplaceMonth(
   return true;
 }
 
-function sourcePeriodicityFromObservation(
-  obs: HistoricalCpiObservation,
-): SourcePeriodicity {
+function sourcePeriodicityFromObservation(obs: HistoricalCpiObservation): SourcePeriodicity {
   return obs.periodicity === 'monthly' ? 'monthly' : 'annual';
 }
 
