@@ -69,7 +69,7 @@ Verified relative targets in `README.md`, `docs/methodology.md`, `data/README.md
 
 All other relative targets (LICENSE, workflows, architecture docs, ops docs, `src/`/`tests/` references, governance/contributing/security, issue templates) resolve.
 
-**Flagged (not a current breakage):** `README.md` line 80 links the parent-repo `../docs/kki/landing-mobile-map-ux.md`, which has no in-repo copy. It resolves correctly in the monorepo but will 404 after a standalone export. This is a cross-repo dependency owned by the Phase 5 export runbook ([`docs/ops/public-repo-export.md`](../ops/public-repo-export.md)), out of Phase 7 scope.
+**Cross-repo dependency resolved:** `README.md` previously linked the parent-repo `../docs/kki/landing-mobile-map-ux.md` (no in-repo copy), which would 404 after a standalone export. The doc was brought in-repo as [`docs/kki/landing-mobile-map-ux.md`](../kki/landing-mobile-map-ux.md) with relative paths rewritten for its new location (`../../landing/...`), and the README link repointed to it. All public docs are now standalone-export safe — no remaining cross-repo `../docs/` overshoots.
 
 ## 6. Remediation (to green)
 
@@ -87,12 +87,11 @@ Post-remediation, the full gate is green **and stable** across the build→check
 - [x] No stale public domains outside intentional legacy/redirect docs
 - [x] No prohibited product framing in user-facing surfaces
 - [x] Docs distinguish implemented methodology from roadmap (verified in scan §4 + Phase 2)
-- [x] Landing page and README stand alone without Karama app context (one cross-repo doc link flagged for export day)
+- [x] Landing page and README stand alone without Karama app context (cross-repo doc link resolved; no remaining `../docs/` overshoots)
 
 ## Out of scope (captured, not done here)
 
 - `git subtree split` export and DNS/Cloudflare dashboard actions (Phase 4/5 manual ops).
-- Copying parent-repo `docs/kki/landing-mobile-map-ux.md` into `khobz-index/` (Phase 5 export runbook).
 - Parent-repo `apps/mobile` i18n changes (cross-checked only for stale public KKI links).
 
 ## Related

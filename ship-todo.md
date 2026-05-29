@@ -662,7 +662,7 @@ Acceptance criteria:
 
 ## Phase 7: Verification
 
-**Status (2026-05-29):** ✅ Complete — deliverable [`docs/shipping v1/phase7-verification.md`](docs/shipping%20v1/phase7-verification.md). Gate green: typecheck, lint, format:check, **147 unit tests**, and `pages:build` all pass; stale-domain and prohibited-language sweeps clean; Addendum UX work confirmed shipped. Remediation: formatted 15 in-flight files, excluded generated fixture data from Biome (stabilizes the `pages:build → format:check` cycle), fixed 2 overshooting doc links. One cross-repo README link flagged for the Phase 5 export runbook.
+**Status (2026-05-29):** ✅ Complete — deliverable [`docs/shipping v1/phase7-verification.md`](docs/shipping%20v1/phase7-verification.md). Gate green: typecheck, lint, format:check, **147 unit tests**, and `pages:build` all pass; stale-domain and prohibited-language sweeps clean; Addendum UX work confirmed shipped. Remediation: formatted 15 in-flight files, excluded generated fixture data from Biome (stabilizes the `pages:build → format:check` cycle), fixed 3 doc links, and brought the previously cross-repo `docs/kki/landing-mobile-map-ux.md` in-repo so the README/landing docs are standalone-export safe (no remaining `../docs/` overshoots).
 
 Run after implementation:
 

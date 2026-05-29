@@ -77,7 +77,7 @@ bun run pipeline -- --dry-run              # skips R2/APK persists, still writes
 
 ### Public landing (`landing/`)
 
-Vite + React map at `/`. **Desktop:** hover tooltip + single click to the country page (unchanged). **Touch / coarse pointer:** first tap highlights the country and opens a bottom preview sheet with an **Explore** CTA; tapping the same country again navigates; tapping “ocean” (the map background SVG layer) clears the preview. Region pills refocus Mercator projections (Global, Africa, MENA, Europe, Asia, Americas) and filter the **ranking** list using basket-region semantics — see [`src/lib/mapRegionFilter.ts`](landing/src/lib/mapRegionFilter.ts). Details: [`docs/kki/landing-mobile-map-ux.md`](../docs/kki/landing-mobile-map-ux.md).
+Vite + React map at `/`. **Desktop:** hover tooltip + single click to the country page (unchanged). **Touch / coarse pointer:** first tap highlights the country and opens a bottom preview sheet with an **Explore** CTA; tapping the same country again navigates; tapping “ocean” (the map background SVG layer) clears the preview. Region pills refocus Mercator projections (Global, Africa, MENA, Europe, Asia, Americas) and filter the **ranking** list using basket-region semantics — see [`src/lib/mapRegionFilter.ts`](landing/src/lib/mapRegionFilter.ts). Details: [`docs/kki/landing-mobile-map-ux.md`](docs/kki/landing-mobile-map-ux.md).
 - **Guards:** `PIPELINE_MONTHS_LIMIT`, `PIPELINE_MAX_COUNTRIES`, `PIPELINE_FRANKFURTER_DELAY_MS` (see `.env.example`).
 
 ---
