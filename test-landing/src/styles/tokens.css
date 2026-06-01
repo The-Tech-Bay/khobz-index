@@ -1,0 +1,54 @@
+/* Minimal subset from landing/src/styles/tokens.css */
+:root,
+[data-theme="light"] {
+  --raw-ink-900: #14171c;
+  --raw-ink-800: #1e2228;
+  --raw-ink-700: #2c3038;
+  --raw-ink-500: #555b66;
+  --raw-ink-400: #707783;
+  --raw-ink-300: #8e95a0;
+  --raw-sand-25: #fcfaf6;
+  --raw-sand-200: #ebe3d6;
+  --raw-sand-100: #f2ece2;
+  --raw-sand-50: #f8f4ed;
+  --raw-emerald-600: #2e7d5b;
+  --raw-emerald-400: #56ab87;
+  --raw-white: #ffffff;
+
+  --fg-default: var(--raw-ink-900);
+  --fg-muted: var(--raw-ink-500);
+  --fg-subtle: var(--raw-ink-400);
+  --bg-default: var(--raw-sand-25);
+  --bg-surface: var(--raw-white);
+  --bg-subtle: var(--raw-sand-50);
+  --border-default: var(--raw-sand-200);
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.75rem;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 9999px;
+  --elevation-2: 0 2px 4px rgba(12, 14, 17, 0.06), 0 1px 2px rgba(12, 14, 17, 0.04);
+  --font-latin: "Inter", system-ui, sans-serif;
+}
+
+[data-theme="dark"] {
+  --fg-default: var(--raw-sand-50);
+  --fg-muted: var(--raw-ink-300);
+  --fg-subtle: var(--raw-ink-400);
+  --bg-default: #0c0e11;
+  --bg-surface: var(--raw-ink-900);
+  --bg-subtle: var(--raw-ink-900);
+  --border-default: var(--raw-ink-700);
+}

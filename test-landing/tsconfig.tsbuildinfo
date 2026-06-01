@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/mappanel.tsx","./src/lib/colorscale.ts","./src/lib/geolookup.ts","./src/lib/sampledata.ts","./src/maps/d3svgvariant.tsx","./src/maps/maplibrevariant.tsx","./src/maps/simplemapsvariant.tsx"],"version":"5.9.3"}
