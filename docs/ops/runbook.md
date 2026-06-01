@@ -189,6 +189,7 @@ If Cloudflare secrets are **unset**, the workflow still runs the **pipeline + Re
 - **Local prices (FAOSTAT CP):** Set **`FAOSTAT_CP_JSON_PATH=data/reference/faostat-pp-backfill.json`** (from `pipeline:prefetch`) or rely on bundled auto-detect. Countries without FAOSTAT data remain `global_only`; the pipeline only exits fatally when nearly all countries collapse to the same global-only USD value, which indicates a missing local-price input rather than normal coverage gaps.
 - **Historical CPI:** Set **`HISTORICAL_CPI_JSON_PATH=data/reference/historical-cpi-envelope.json`** (from `pipeline:prefetch-cpi`). Replaces pre-local `global_only` months with CPI-chained estimates. If the latest KKI month is newer than the CPI envelope, the backfill anchors to the latest local month with CPI coverage instead of no-oping.
 - **FX (monthly loop):** The pipeline uses the **`fx_display` slot** (`Frankfurter` → `exchangerate.host`, with adapter retries) instead of calling Frankfurter directly. Transient Frankfurter **HTTP 520** errors should fall through after retries; set **`EXCHANGERATE_HOST_URL`** or **`EXCHANGERATE_HOST_API_KEY`** for the backup. Throttle with **`PIPELINE_FRANKFURTER_DELAY_MS`** (default 500 ms between months on backfill).
+- **Progress:** Each month logs `[pipeline] month N/M · YYYY-MM` at loop start (CPI backfill and R2 export remain silent until the final `OK` line).
 
 ### 3.2 `GlobalTrackMismatch` during `--backfill`
 

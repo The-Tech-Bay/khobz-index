@@ -268,6 +268,8 @@ async function main(): Promise<void> {
   for (let mi = 0; mi < months.length; mi++) {
     const month = months[mi];
     if (month === undefined) continue;
+    // biome-ignore lint/suspicious/noConsole: CLI progress (long backfills are otherwise silent)
+    console.info(`[pipeline] month ${mi + 1}/${months.length} · ${month}`);
     if (mi > 0) await sleep(cli.frankfurterDelayMs);
 
     lastFxSlot = await orch.fetchSlot({ target_date: `${month}-15` }, 'fx_display');
