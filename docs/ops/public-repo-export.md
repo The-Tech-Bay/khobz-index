@@ -2,46 +2,58 @@
 
 **Decision D1-A:** Canonical public topology is standalone [The-Tech-Bay/khobz-index](https://github.com/The-Tech-Bay/khobz-index).
 
-This document covers exporting `khobz-index/` from the Karama monorepo. **Phase 5 prepares the tree in-place**; the actual `git subtree split` and push are operator steps on export day.
+**Mirror policy (2026-06):** Standalone `main` is **mirror-only**. All development happens in `karama/khobz-index/`; the Karama monorepo workflow [`.github/workflows/khobz-index-mirror.yml`](../../../.github/workflows/khobz-index-mirror.yml) force-pushes a `git subtree split` on every `main` push that touches `khobz-index/**`.
 
 ## Current state (monorepo)
 
 | Item | Location |
 |------|----------|
-| Source tree | `The-Tech-Bay/karama/khobz-index/` |
+| Source of truth | `The-Tech-Bay/karama/khobz-index/` |
+| **Automated mirror** | [`.github/workflows/khobz-index-mirror.yml`](../../../.github/workflows/khobz-index-mirror.yml) |
 | **Active** weekly cron | [`.github/workflows/kki-weekly.yml`](../../../.github/workflows/kki-weekly.yml) (`working-directory: khobz-index`) |
-| Standalone workflow (ready, inactive) | [`../../.github/workflows/kki-weekly.yml`](../../.github/workflows/kki-weekly.yml) |
-| CI (lint/test) | [`../../.github/workflows/ci.yml`](../../.github/workflows/ci.yml) |
+| Standalone weekly (post-cutover) | [`../../.github/workflows/kki-weekly.yml`](../../.github/workflows/kki-weekly.yml) |
+| CI (lint/test/mirror gate) | [`../../.github/workflows/ci.yml`](../../.github/workflows/ci.yml) |
 
-Do **not** disable the parent cron until the standalone repo is live and secrets are migrated.
+Do **not** disable the parent cron until the standalone repo is public, secrets are migrated, and a green `workflow_dispatch` on standalone `KKI Weekly Pipeline` is recorded.
 
-## Pre-export checklist
+## Mirror deploy key (one-time setup)
 
-- [ ] Phase 5 deliverables complete ([`phase5-public-github-readiness.md`](../shipping%20v1/phase5-public-github-readiness.md))
-- [ ] `bun test tests/unit`, `bun run typecheck`, `bun run pages:build`, `bun run pages:verify` green
-- [ ] No personal Worker hostnames in public docs ([`runbook.md`](./runbook.md))
-- [ ] GitHub links resolve to `The-Tech-Bay/khobz-index` ([`data/README.md`](../../data/README.md))
-
-## Export procedure (operator)
-
-### 1. Create or verify standalone repo
+Generate an Ed25519 deploy key with **write** access to `The-Tech-Bay/khobz-index` only:
 
 ```bash
-gh repo view The-Tech-Bay/khobz-index || gh repo create The-Tech-Bay/khobz-index --public --description "Karama Khobz Index (KKI) — open methodology and data"
+ssh-keygen -t ed25519 -C "karama-khobz-index-mirror" -f ./khobz-index-mirror-deploy -N ""
 ```
 
-### 2. Subtree split and push
+1. Add **`khobz-index-mirror-deploy.pub`** to **The-Tech-Bay/khobz-index** → Settings → Deploy keys → **Allow write access**.
+2. Add the **private key** contents to the **Karama** repo → Settings → Secrets → Actions as **`KHOBZ_INDEX_MIRROR_DEPLOY_KEY`**.
 
-From the Karama repo root:
+Verify: merge to `karama` `main` with a `khobz-index/**` change, or run **KKI subtree mirror** via `workflow_dispatch`. Standalone `main` should advance to the new split SHA.
+
+## Pre-mirror gate (automated)
+
+The mirror workflow runs before push:
 
 ```bash
+cd khobz-index
+bun run mirror:verify    # no * 2.* clutter; public-surface domain/language scan
+bun test tests/unit
+bun run typecheck
+bun run pages:build
+```
+
+[`scripts/verify-mirror-readiness.ts`](../../scripts/verify-mirror-readiness.ts) also runs in standalone CI.
+
+## Manual subtree export (fallback)
+
+If Actions is unavailable:
+
+```bash
+# From Karama repo root
 git subtree split --prefix=khobz-index -b khobz-index-export
-git push git@github.com:The-Tech-Bay/khobz-index.git khobz-index-export:main
+git push --force git@github.com:The-Tech-Bay/khobz-index.git khobz-index-export:main
 ```
 
-Alternative: fresh clone of `khobz-index/` history if subtree history is too noisy.
-
-### 3. Migrate GitHub Actions secrets
+## Secrets migration (standalone repo)
 
 Copy from parent **karama** repo → **khobz-index** repo (Settings → Secrets):
 
@@ -56,45 +68,36 @@ Copy from parent **karama** repo → **khobz-index** repo (Settings → Secrets)
 | `IA_S3_ACCESS_KEY` | If Internet Archive enabled |
 | `IA_S3_SECRET_KEY` | If Internet Archive enabled |
 
-Or run from monorepo checkout (targets standalone repo after `gh repo set-default`):
+Or run from monorepo checkout:
 
 ```bash
 cd khobz-index
 bun run cf:provision-deploy -- --sync-github
 ```
 
-### 4. Switch cron ownership
+## Launch cutover (operator)
 
-1. Enable schedule on standalone [`kki-weekly.yml`](../../.github/workflows/kki-weekly.yml) (already ported — verify one successful `workflow_dispatch` run).
-2. Disable or remove schedule from parent [`.github/workflows/kki-weekly.yml`](../../../.github/workflows/kki-weekly.yml) (keep file with comment pointing here, or delete after cutover).
+Full checklist: [`launch-cutover-checklist.md`](./launch-cutover-checklist.md).
 
-### 5. Post-export verification
+Summary:
 
-```bash
-cd khobz-index   # standalone clone
-bun install --frozen-lockfile
-bun test tests/unit
-bun run typecheck
-bash scripts/verify-landing-urls.sh
-```
-
-Confirm GitHub Releases attach under `The-Tech-Bay/khobz-index/releases`.
-
-### 6. Update cross-repo links
-
-- Karama app/docs: point data citations to standalone releases URL
-- Communication kit: confirm `khobz-index.thebay.ma` and GitHub repo links
-- UptimeRobot / monitoring: unchanged (landing URL is canonical)
+1. Confirm mirror workflow green and standalone CI green.
+2. `workflow_dispatch` **KKI Weekly Pipeline** on **The-Tech-Bay/khobz-index** until green.
+3. Run [`public-release-checklist.md`](./public-release-checklist.md) for first `vYYYY-MM` release.
+4. Set **The-Tech-Bay/khobz-index** visibility to **Public**.
+5. Remove `schedule` from parent [`.github/workflows/kki-weekly.yml`](../../../.github/workflows/kki-weekly.yml) (keep `workflow_dispatch`).
+6. `bash scripts/verify-landing-urls.sh` from standalone clone.
 
 ## Rollback
 
-If export fails mid-flight:
+If mirror or cutover fails mid-flight:
 
-1. Re-enable parent `kki-weekly.yml` schedule
-2. Delete or archive empty standalone repo push
-3. Continue development in monorepo path
+1. Re-enable parent `kki-weekly.yml` schedule if disabled
+2. Continue development in `karama/khobz-index/`; fix mirror gate or deploy key
+3. Re-run mirror `workflow_dispatch` after fix
 
 ## Related
 
-- [`ship-todo.md`](../../ship-todo.md) Phase 5–7
+- [`ship-todo.md`](../../ship-todo.md) Phase 8
 - [`decisions-d1-d4-guide.md`](../shipping%20v1/decisions-d1-d4-guide.md) — D1-A standalone repo
+- [`launch-cutover-checklist.md`](./launch-cutover-checklist.md)

@@ -33,3 +33,6 @@ jobs:
 
       - name: Unit tests
         run: bun run test
+
+      - name: Mirror readiness gate
+        run: bun run mirror:verify

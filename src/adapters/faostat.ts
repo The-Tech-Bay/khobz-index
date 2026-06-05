@@ -75,7 +75,7 @@ export type FaostatPriceEnvelope = { data?: FaostatJsonRow[] };
  */
 export function extractFaostatPriceRecordsFromEnvelope(
   envelope: FaostatPriceEnvelope,
-  params: Pick<FetchParams, 'countries' | 'lcu_per_usd_by_country'> & { filter_month?: string },
+  params: Pick<FetchParams, 'countries' | 'lcu_per_usd_by_country' | 'filter_month'>,
   fetchedAt: string,
 ): PriceRecord[] {
   const j = envelope;

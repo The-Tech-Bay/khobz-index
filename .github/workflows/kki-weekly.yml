@@ -39,9 +39,6 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Fetch FAOSTAT producer prices (bulk CSV → JSON envelope)
-        run: bun run pipeline:prefetch
-
       - name: Resolve 6-month window for fixture history
         id: months
         run: |
@@ -50,6 +47,11 @@ jobs:
           echo "from=$FROM" >> "$GITHUB_OUTPUT"
           echo "to=$TO" >> "$GITHUB_OUTPUT"
           echo "Pipeline window: $FROM → $TO"
+
+      - name: Fetch FAOSTAT producer prices (bulk CSV → JSON envelope)
+        env:
+          PIPELINE_FILL_TO: ${{ steps.months.outputs.to }}
+        run: bun run pipeline:prefetch
 
       - name: Run pipeline (fetch → calculate → R2 mirror + summaries)
         env:

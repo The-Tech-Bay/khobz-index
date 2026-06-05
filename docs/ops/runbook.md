@@ -14,6 +14,8 @@ Canonical architecture: [`../architecture/architecture.md`](../architecture/arch
 
 **Ops preview only:** `https://khobz-index-landing.pages.dev` — deploy verification; do not use in public copy.
 
+**Repo mirror:** Source of truth is `karama/khobz-index/`. Automated subtree push: Karama [`.github/workflows/khobz-index-mirror.yml`](../../../.github/workflows/khobz-index-mirror.yml). Setup: [`public-repo-export.md`](./public-repo-export.md). Launch: [`launch-cutover-checklist.md`](./launch-cutover-checklist.md).
+
 ## Internal operator URLs (not public v1 API)
 
 | Surface | URL / location |
@@ -190,6 +192,31 @@ If Cloudflare secrets are **unset**, the workflow still runs the **pipeline + Re
 - **Historical CPI:** Set **`HISTORICAL_CPI_JSON_PATH=data/reference/historical-cpi-envelope.json`** (from `pipeline:prefetch-cpi`). Replaces pre-local `global_only` months with CPI-chained estimates. If the latest KKI month is newer than the CPI envelope, the backfill anchors to the latest local month with CPI coverage instead of no-oping.
 - **FX (monthly loop):** The pipeline uses the **`fx_display` slot** (`Frankfurter` → `exchangerate.host`, with adapter retries) instead of calling Frankfurter directly. Transient Frankfurter **HTTP 520** errors should fall through after retries; set **`EXCHANGERATE_HOST_URL`** or **`EXCHANGERATE_HOST_API_KEY`** for the backup. Throttle with **`PIPELINE_FRANKFURTER_DELAY_MS`** (default 500 ms between months on backfill).
 - **Progress:** Each month logs `[pipeline] month N/M · YYYY-MM` at loop start (CPI backfill and R2 export remain silent until the final `OK` line).
+- **Memory (`PIPELINE_SKIP_R2_MIRROR=1`):** `pipeline:backfill` sets this by default. It still writes `build/khobz-index-YYYY-MM.json` rollups but skips holding ~100k per-country R2 snapshots in RAM. After any partial or full backfill, run **`bun run pipeline:rebuild-fixture`** to merge rollups + CPI-chained history into the landing fixture.
+- **FAOSTAT horizon:** `pipeline:prefetch` forward-fills through **`PIPELINE_FILL_TO`** or the same **previous UTC month** the pipeline uses as `--to`. Without this extension, months after the 6-month staleness cap have no local rows and the run fatals on `global_only`. Re-run **`bun run pipeline:prefetch`** after changing fill logic or when the latest month shifts.
+
+### 3.1c Exit code 137 / `Killed: 9` (OOM)
+
+macOS/Linux sent **SIGKILL** because the Bun process exceeded available RAM. Typical on a full `1990-01` → present run **without** `PIPELINE_SKIP_R2_MIRROR` (each month × country snapshot was kept in an in-memory map until export).
+
+**Check progress:**
+
+```bash
+ls build/khobz-index-*.json | wc -l   # expect 437 when complete
+```
+
+**Finish a partial run** (only missing months — do not restart from 1990):
+
+```bash
+cd khobz-index
+bun run pipeline:backfill:tail -- --from=2026-05 --to=2026-05
+bun run pipeline:rebuild-fixture
+bun run pages:build   # optional — refresh landing shards
+```
+
+Use `--dry-run` on the tail command if you only need month rollups and will rebuild the fixture separately (same R2 skip, no APK bundle).
+
+**Full regen from scratch:** use `pipeline:backfill` (R2 mirror skip is on by default), then `pipeline:rebuild-fixture`. Close other heavy apps; 16 GB+ RAM recommended for the CPI + fixture merge step.
 
 ### 3.2 `GlobalTrackMismatch` during `--backfill`
 

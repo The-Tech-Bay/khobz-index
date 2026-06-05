@@ -98,6 +98,8 @@ export interface FetchParams {
   lcu_per_usd_by_country?: Record<string, number>;
   /** WB Indicators API: optional monthly date window (yyyyMmm:yyyyMmm). */
   wb_date_range?: string;
+  /** FAOSTAT bulk envelope: restrict rows to this YYYY-MM month. */
+  filter_month?: string;
   /** Timeout in milliseconds */
   timeout_ms?: number;
   /** Previous fetch state — adapter uses this to detect staleness and short-circuit */

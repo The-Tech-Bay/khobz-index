@@ -109,9 +109,16 @@ function sleep(ms: number): Promise<void> {
 interface PipelineCli {
   readonly months: string[];
   readonly skipPersist: boolean;
+  /** Skip per-country R2 mirror writes (saves RAM on long `--backfill` runs). */
+  readonly skipR2Mirror: boolean;
   readonly maxCountries?: number;
   readonly frankfurterDelayMs: number;
   readonly force: boolean;
+}
+
+function readSkipR2MirrorEnv(): boolean {
+  const raw = (process.env.PIPELINE_SKIP_R2_MIRROR ?? '').trim().toLowerCase();
+  return raw === '1' || raw === 'true' || raw === 'yes';
 }
 
 function readMaxCountriesEnv(): number | undefined {
@@ -142,6 +149,7 @@ function readFixtureMonthsLimit(): number | null {
 
 function parseArgv(argv: string[]): PipelineCli {
   const skipPersist = argv.includes('--dry-run');
+  const skipR2Mirror = skipPersist || readSkipR2MirrorEnv();
   const force = argv.includes('--force');
   let fromYm = '';
   let toYm = '';
@@ -162,6 +170,7 @@ function parseArgv(argv: string[]): PipelineCli {
     return {
       months: [m],
       skipPersist,
+      skipR2Mirror,
       maxCountries: readMaxCountriesEnv(),
       frankfurterDelayMs: readFrankDelay(),
       force,
@@ -176,6 +185,7 @@ function parseArgv(argv: string[]): PipelineCli {
     return {
       months: [fallback],
       skipPersist,
+      skipR2Mirror,
       maxCountries: readMaxCountriesEnv(),
       frankfurterDelayMs: readFrankDelay(),
       force,
@@ -193,6 +203,7 @@ function parseArgv(argv: string[]): PipelineCli {
   return {
     months,
     skipPersist,
+    skipR2Mirror,
     maxCountries: readMaxCountriesEnv(),
     frankfurterDelayMs: readFrankDelay(),
     force,
@@ -238,6 +249,12 @@ async function main(): Promise<void> {
   console.info(
     `[pipeline] ${months.length} months · ${months[0]} → ${months[months.length - 1]} · ${countryList.length} countries`,
   );
+  if (cli.skipR2Mirror && !cli.skipPersist) {
+    // biome-ignore lint/suspicious/noConsole: CLI
+    console.info(
+      '[pipeline] R2 mirror persist skipped (PIPELINE_SKIP_R2_MIRROR or --dry-run) — month rollups still written to build/',
+    );
+  }
 
   const [slotCereals, slotCrude, slotGold] = await Promise.all([
     orch.fetchSlot(prefetchParams, 'global_cereals_oils_sugar'),
@@ -296,6 +313,7 @@ async function main(): Promise<void> {
     const slotLocal = await orch.fetchSlot(
       {
         target_date: `${month}-15`,
+        filter_month: month,
         lcu_per_usd_by_country: lcuPerCountry,
       },
       'local_market_prices',
@@ -415,7 +433,7 @@ async function main(): Promise<void> {
         },
       });
 
-      if (!cli.skipPersist) {
+      if (!cli.skipR2Mirror) {
         const pr = await persistCountryMonth(r2Smoke, 'v1.0', month, record, countrySnapshot);
         if (!pr.ok) {
           // biome-ignore lint/suspicious/noConsole: fatal
@@ -543,7 +561,7 @@ async function main(): Promise<void> {
         if (idx >= 0) arr[idx] = rec;
         else arr.push(rec);
 
-        if (!cli.skipPersist && !prior) {
+        if (!cli.skipR2Mirror && !prior) {
           const countrySnapshot = await buildCountrySnapshotMinimal({
             country_code: ccU,
             snapshot_date: `${rec.month}-15`,
@@ -582,8 +600,12 @@ async function main(): Promise<void> {
   }
 
   const r2MirrorDir = resolve(outDir, 'r2-mirror');
-  const { keys: r2Keys } = await exportInMemoryToDir(r2Smoke, r2MirrorDir);
-  writeFileSync(join(outDir, 'r2-keys.txt'), `${r2Keys.join('\n')}\n`, 'utf8');
+  const { keys: r2Keys } = cli.skipR2Mirror
+    ? { keys: [] as string[] }
+    : await exportInMemoryToDir(r2Smoke, r2MirrorDir);
+  if (!cli.skipR2Mirror) {
+    writeFileSync(join(outDir, 'r2-keys.txt'), `${r2Keys.join('\n')}\n`, 'utf8');
+  }
 
   const nowIsoFinal = new Date().toISOString();
   const weekId = isoWeekId(new Date());

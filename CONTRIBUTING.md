@@ -8,7 +8,11 @@ Thank you for your interest in contributing. KKI is an open methodology and open
 
 ### Code contributions (source adapters, calculation engine, tooling)
 
-1. Fork this repository
+**Mirror-only policy:** While KKI is developed inside the [Karama monorepo](https://github.com/The-Tech-Bay/karama) at `khobz-index/`, do **not** open PRs against standalone `The-Tech-Bay/khobz-index` `main` — that branch is force-pushed by automation. Fork **Karama**, change `khobz-index/`, and open a PR there. After merge, the [subtree mirror workflow](../../../.github/workflows/khobz-index-mirror.yml) updates the public repo.
+
+When `khobz-index` is the sole checkout (standalone clone):
+
+1. Fork this repository (for post-cutover direct contributions)
 2. Create a feature branch (`git checkout -b feat/my-change`)
 3. Install tooling (`bun install`) — installs Git hooks via **Lefthook**
 4. Make your changes

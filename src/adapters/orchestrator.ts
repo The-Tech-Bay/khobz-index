@@ -128,7 +128,8 @@ export class KkiAdapterOrchestrator {
       ? Object.keys(params.lcu_per_usd_by_country).sort().join('|')
       : '';
     const wb = params.wb_date_range ?? '';
-    return `${adapter.id}:${params.target_date}:${cc}:${lcuKeys}:${wb}:${params.timeout_ms ?? ''}`;
+    const fm = params.filter_month ?? '';
+    return `${adapter.id}:${params.target_date}:${cc}:${lcuKeys}:${wb}:${fm}:${params.timeout_ms ?? ''}`;
   }
 
   private runAdapter(adapter: SourceAdapter, params: FetchParams): Promise<AdapterResult> {

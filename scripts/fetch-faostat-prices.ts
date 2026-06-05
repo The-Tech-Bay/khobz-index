@@ -16,7 +16,10 @@
  *      between adjacent years when possible; flat fill for edge years).
  *   5. Forward-fills at most {@link FORWARD_FILL_CAP_MONTHS} months past the
  *      latest true observation, tagged `forward_filled`.
- *   6. Writes `{ "data": [ ... ] }` JSON envelope to the output path.
+ *   6. Extends each area×item through {@link resolveFillThroughYm} (default: previous
+ *      UTC month — same as the pipeline `--to` default) so recent KKI months are not
+ *      empty after the v1.1 staleness cap.
+ *   7. Writes `{ "data": [ ... ] }` JSON envelope to the output path.
  *
  * The pipeline reads this via FAOSTAT_CP_JSON_PATH env var.
  *
@@ -36,6 +39,7 @@ import {
 import { dirname, resolve } from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
+import { defaultPreviousUtcMonth } from '../src/pipeline/lib/month-utils.js';
 
 const BULK_URL =
   'https://fenixservices.fao.org/faostat/static/bulkdownloads/Prices_E_All_Data_(Normalized).zip';
@@ -126,7 +130,11 @@ export function ymKey(year: number, month: number): string {
   return `${year}-${String(month).padStart(2, '0')}`;
 }
 
-export function addMonths(year: number, month: number, delta: number): { year: number; month: number } {
+export function addMonths(
+  year: number,
+  month: number,
+  delta: number,
+): { year: number; month: number } {
   let y = year;
   let m = month + delta;
   while (m > 12) {
@@ -140,14 +148,74 @@ export function addMonths(year: number, month: number, delta: number): { year: n
   return { year: y, month: m };
 }
 
-export function compareYm(
-  y1: number,
-  m1: number,
-  y2: number,
-  m2: number,
-): number {
+export function compareYm(y1: number, m1: number, y2: number, m2: number): number {
   if (y1 !== y2) return y1 - y2;
   return m1 - m2;
+}
+
+/** `YYYY-MM` → year/month parts. */
+export function parseYm(ym: string): { year: number; month: number } {
+  const [yRaw, mRaw] = ym.slice(0, 7).split('-');
+  const year = Number(yRaw);
+  const month = Number(mRaw);
+  if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) {
+    throw new Error(`Invalid YYYY-MM: ${ym}`);
+  }
+  return { year, month };
+}
+
+/** Align FAOSTAT forward-fill horizon with pipeline canonical month (`PIPELINE_FILL_TO` or previous UTC month). */
+export function resolveFillThroughYm(): string {
+  const raw = (process.env.PIPELINE_FILL_TO ?? '').trim().slice(0, 7);
+  if (/^\d{4}-\d{2}$/.test(raw)) return raw;
+  return defaultPreviousUtcMonth();
+}
+
+/**
+ * After capped forward-fill, carry each area×item's latest value through `targetYm`
+ * so pipeline months beyond the 6-month staleness window still have local proxy rows.
+ */
+export function extendForwardFillThroughTarget(
+  rows: readonly EnvelopeRow[],
+  targetYm: string,
+): { rows: EnvelopeRow[]; pipelineExtendedCount: number } {
+  const target = parseYm(targetYm);
+  const latestByKey = new Map<string, EnvelopeRow>();
+  for (const r of rows) {
+    const k = `${r.area_code}:${r.item_code}`;
+    const y = Number(r.year);
+    const m = Number(r.months);
+    const prev = latestByKey.get(k);
+    if (!prev) {
+      latestByKey.set(k, r);
+      continue;
+    }
+    const py = Number(prev.year);
+    const pm = Number(prev.months);
+    if (compareYm(y, m, py, pm) > 0) latestByKey.set(k, r);
+  }
+
+  const extra: EnvelopeRow[] = [];
+  let pipelineExtendedCount = 0;
+  for (const latest of latestByKey.values()) {
+    let y = Number(latest.year);
+    let m = Number(latest.months);
+    if (compareYm(y, m, target.year, target.month) >= 0) continue;
+
+    while (compareYm(y, m, target.year, target.month) < 0) {
+      const next = addMonths(y, m, 1);
+      y = next.year;
+      m = next.month;
+      extra.push({
+        ...latest,
+        year: String(y),
+        months: String(m).padStart(2, '0'),
+        fill_kind: 'forward_filled',
+      });
+      pipelineExtendedCount++;
+    }
+  }
+  return { rows: [...rows, ...extra], pipelineExtendedCount };
 }
 
 function parseCSVLine(line: string): string[] {
@@ -247,7 +315,10 @@ function parseRelevantRows(csvPath: string): ParsedRow[] {
   return rows;
 }
 
-export function convertToEnvelope(parsed: ParsedRow[]): EnvelopeRow[] {
+export function convertToEnvelope(
+  parsed: ParsedRow[],
+  options?: { fillThroughYm?: string },
+): EnvelopeRow[] {
   type AnnualKey = string;
   const annualMap = new Map<AnnualKey, { row: ParsedRow; monthlyPresent: boolean }>();
   const monthlyRows: ParsedRow[] = [];
@@ -304,9 +375,8 @@ export function convertToEnvelope(parsed: ParsedRow[]): EnvelopeRow[] {
     }
   }
 
-  const nowDate = new Date();
-  const fillToYear = nowDate.getFullYear();
-  const fillToMonth = nowDate.getMonth() + 1;
+  const fillThroughYm = options?.fillThroughYm ?? resolveFillThroughYm();
+  const { year: fillToYear, month: fillToMonth } = parseYm(fillThroughYm);
 
   type LatestKey = string;
   const latestByAreaItem = new Map<
@@ -358,10 +428,15 @@ export function convertToEnvelope(parsed: ParsedRow[]): EnvelopeRow[] {
     }
   }
 
-  console.info(
-    `[fetch-faostat] Envelope: ${output.length} monthly rows (${forwardFillCount} forward-filled, ${cappedForwardFillCount} area-items hit ${FORWARD_FILL_CAP_MONTHS}-month cap, through ${fillToYear}-${String(fillToMonth).padStart(2, '0')})`,
+  const { rows: extended, pipelineExtendedCount } = extendForwardFillThroughTarget(
+    output,
+    fillThroughYm,
   );
-  return output;
+
+  console.info(
+    `[fetch-faostat] Envelope: ${extended.length} monthly rows (${forwardFillCount} forward-filled, ${cappedForwardFillCount} area-items hit ${FORWARD_FILL_CAP_MONTHS}-month cap, ${pipelineExtendedCount} pipeline-horizon extension to ${fillThroughYm})`,
+  );
+  return extended;
 }
 
 function toEnvelopeRow(
@@ -407,7 +482,11 @@ async function main() {
 
   const csvPath = await downloadAndExtract(tmpDir);
   const parsed = parseRelevantRows(csvPath);
-  const envelope = convertToEnvelope(parsed);
+  const fillThroughYm = resolveFillThroughYm();
+  console.info(
+    `[fetch-faostat] Forward-fill horizon: ${fillThroughYm} (PIPELINE_FILL_TO or previous UTC month)`,
+  );
+  const envelope = convertToEnvelope(parsed, { fillThroughYm });
 
   mkdirSync(dirname(outputPath), { recursive: true });
   writeFileSync(outputPath, JSON.stringify({ data: envelope }, null, 0), 'utf8');
@@ -415,4 +494,6 @@ async function main() {
   console.info(`[fetch-faostat] Wrote ${outputPath} (${sizeMb} MB, ${envelope.length} rows)`);
 }
 
-await main();
+if (import.meta.main) {
+  await main();
+}

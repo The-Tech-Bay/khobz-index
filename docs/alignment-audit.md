@@ -42,6 +42,7 @@ No changes in this pass required rework of any completed §2.1B–§2.5B deliver
 | P4 | 2026-05-28 | **Phase 4 domain wiring** — canonical `khobz-index.thebay.ma`; `kilocalorie-index.thebay.ma` 301 via [`landing/functions/_middleware.ts`](../landing/functions/_middleware.ts); public vs internal URLs in runbook; no public KKI API hostname in OpenAPI/README. See [`phase4-domain-wiring.md`](./shipping%20v1/phase4-domain-wiring.md). |
 | P5 | 2026-05-28 | **Phase 5 public GitHub readiness** — `The-Tech-Bay/khobz-index` links in `data/README.md`; SECURITY.md + source correction template; README CI dual-mode; runbook Worker URL redacted; export runbook. See [`phase5-public-github-readiness.md`](./shipping%20v1/phase5-public-github-readiness.md). |
 | P6 | 2026-05-29 | **Phase 6 data publication + citation** — `data/README.md` canonical monthly-grain section + neutral The Tech Bay attribution/BibTeX; new [`docs/ops/public-release-checklist.md`](./ops/public-release-checklist.md) cross-linked from runbook + README. See [`phase6-data-publication.md`](./shipping%20v1/phase6-data-publication.md). |
+| P8 | 2026-06-05 | **Phase 8 automated mirroring** — mirror-only policy; Karama [`.github/workflows/khobz-index-mirror.yml`](../../../.github/workflows/khobz-index-mirror.yml); `mirror:verify` gate; FAOSTAT `PIPELINE_FILL_TO` + `extendForwardFillThroughTarget`; launch cutover checklist. See [`docs/ops/public-repo-export.md`](./ops/public-repo-export.md), [`launch-cutover-checklist.md`](./ops/launch-cutover-checklist.md). |
 
 ## Verification summary
 

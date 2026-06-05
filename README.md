@@ -107,12 +107,12 @@ Architecture reference: [`docs/architecture/stack.md`](docs/architecture/stack.m
 
 **Dual-mode layout (D1-A):**
 
-| Mode | Weekly pipeline | Unit CI |
-|------|-----------------|---------|
-| **Monorepo (current production)** | Parent [`.github/workflows/kki-weekly.yml`](../.github/workflows/kki-weekly.yml) with `working-directory: khobz-index` | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) in this folder |
-| **Standalone** [`The-Tech-Bay/khobz-index`](https://github.com/The-Tech-Bay/khobz-index) | [`.github/workflows/kki-weekly.yml`](.github/workflows/kki-weekly.yml) (ported from parent; enable on export day) | Same `ci.yml` |
+| Mode | Subtree mirror | Weekly pipeline | Unit CI |
+|------|----------------|-----------------|---------|
+| **Monorepo (source of truth)** | Parent [`.github/workflows/khobz-index-mirror.yml`](../.github/workflows/khobz-index-mirror.yml) on `khobz-index/**` push | Parent [`.github/workflows/kki-weekly.yml`](../.github/workflows/kki-weekly.yml) (`working-directory: khobz-index`) | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
+| **Standalone** [`The-Tech-Bay/khobz-index`](https://github.com/The-Tech-Bay/khobz-index) | Receives force-push to `main` (mirror-only — no direct commits) | [`.github/workflows/kki-weekly.yml`](.github/workflows/kki-weekly.yml) after launch cutover | Same `ci.yml` |
 
-Export procedure: [`docs/ops/public-repo-export.md`](docs/ops/public-repo-export.md). Do **not** disable the parent cron until secrets are migrated.
+Export + mirror setup: [`docs/ops/public-repo-export.md`](docs/ops/public-repo-export.md). Launch cutover: [`docs/ops/launch-cutover-checklist.md`](docs/ops/launch-cutover-checklist.md). Do **not** disable the parent weekly cron until standalone pipeline is green and secrets are migrated.
 
 | Workflow | Trigger | Purpose |
 |---|---|---|
