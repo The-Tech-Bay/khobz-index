@@ -794,7 +794,7 @@ Return:
 
 ## Phase 8: Automated mirroring + launch cutover
 
-**Status (2026-06-05):** Implementation complete in monorepo — operator cutover remains.
+**Status (2026-06-05):** Complete — mirror workflow, pipeline fix, public repo, `v2026-05` release, parent cron cutover.
 
 Goal: automate `git subtree split` → `The-Tech-Bay/khobz-index` on every `khobz-index/**` change; complete public launch operator steps.
 
@@ -806,22 +806,22 @@ Goal: automate `git subtree split` → `The-Tech-Bay/khobz-index` on every `khob
 ### Task 8.2: Mirror workflow
 
 - [x] [`.github/workflows/khobz-index-mirror.yml`](../.github/workflows/khobz-index-mirror.yml) on Karama repo (path filter, gate, subtree force-push)
-- [ ] `KHOBZ_INDEX_MIRROR_DEPLOY_KEY` configured on Karama repo (human — see [`docs/ops/public-repo-export.md`](docs/ops/public-repo-export.md))
+- [ ] `KHOBZ_INDEX_MIRROR_DEPLOY_KEY` configured on Karama repo (optional if using manual subtree push; see [`docs/ops/public-repo-export.md`](docs/ops/public-repo-export.md))
 
 ### Task 8.3: Standalone weekly pipeline fix
 
 - [x] FAOSTAT `extendForwardFillThroughTarget` + `PIPELINE_FILL_TO` aligned with pipeline `--to` in `kki-weekly.yml`
 - [x] `filter_month` on local slot fetch
-- [ ] Green `workflow_dispatch` on standalone `KKI Weekly Pipeline` (verify after mirror sync)
+- [x] Green `workflow_dispatch` on standalone `KKI Weekly Pipeline` (run 27013201933)
 
 ### Task 8.4: Launch cutover (operator)
 
 Checklist: [`docs/ops/launch-cutover-checklist.md`](docs/ops/launch-cutover-checklist.md)
 
-- [ ] First `vYYYY-MM` GitHub Release on standalone
-- [ ] Repo visibility **Public**
-- [ ] Parent `kki-weekly.yml` schedule disabled; standalone cron active
-- [ ] `bash scripts/verify-landing-urls.sh` green
+- [x] First `vYYYY-MM` GitHub Release on standalone (`v2026-05`)
+- [x] Repo visibility **Public**
+- [x] Parent `kki-weekly.yml` schedule disabled; standalone cron active
+- [x] `bash scripts/verify-landing-urls.sh` green
 
 ## Definition of Done
 
