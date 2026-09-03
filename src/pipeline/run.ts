@@ -15,6 +15,7 @@ import { getBasketForCountry } from '../engine/basket.js';
 import { computeGlobalBasketCost } from '../engine/global-track.js';
 import { getCurrency } from '../engine/hybrid.js';
 import { calculateKKI } from '../engine/index.js';
+import { METHODOLOGY_VERSION } from '../engine/versioning.js';
 import { COUNTRY_TO_REGION } from '../shared/countries.js';
 import type { FetchParams, GlobalTrack, IndexRecord, PriceRecord } from '../shared/schema.js';
 import {
@@ -24,25 +25,30 @@ import {
   persistApkBundle,
   persistCountryMonth,
 } from '../storage/index.js';
-
 import { loadMonthlyBenchmarkCsv } from './lib/benchmark-csv.js';
 import { priceRecordsToBasketCommodityPrices, tierForSourceId } from './lib/commodity-prices.js';
 import { buildLandingFixtureData, type CountryMonthlyPipelineRow } from './lib/fixture-builder.js';
+import {
+  fixturePublishSummary,
+  loadPreviousPublishedFixture,
+  logPreviousFixtureLoad,
+  prepareFixtureForPublish,
+} from './lib/fixture-publish.js';
 import { writeLandingFixtureShards } from './lib/fixture-shards.js';
+import { lcuPerUsdFromFxRecords } from './lib/fx-utils.js';
+import { assembleGlobalTrackForMonth } from './lib/global-track-assemble.js';
 import {
   backfillHistoricalRecords,
   hasLocalKkiData,
   historicalTargetMonths,
 } from './lib/historical-backfill.js';
-import { lcuPerUsdFromFxRecords } from './lib/fx-utils.js';
-import { assembleGlobalTrackForMonth } from './lib/global-track-assemble.js';
 import { deriveLocalProvenanceFromCommodityPrices } from './lib/local-provenance.js';
 import {
   defaultPreviousUtcMonth,
   expandInclusiveMonths,
   worldBankMonthRange,
 } from './lib/month-utils.js';
-import { METHODOLOGY_VERSION } from '../engine/versioning.js';
+
 const SCHEMA_VERSION = '1.0.0';
 const SCHEMA_MARKETING = '1.0';
 const DEFAULT_HISTORICAL_FROM = '1990-01';
@@ -114,6 +120,17 @@ interface PipelineCli {
   readonly maxCountries?: number;
   readonly frankfurterDelayMs: number;
   readonly force: boolean;
+  /**
+   * Merge the freshly-computed fixture window into the previously published
+   * full-history fixture before writing. Default true; disabled for `--backfill`
+   * (authoritative full rebuild), `--dry-run`, or `PIPELINE_FIXTURE_NO_MERGE=1`.
+   */
+  readonly mergeFixture: boolean;
+}
+
+function readNoMergeEnv(): boolean {
+  const raw = (process.env.PIPELINE_FIXTURE_NO_MERGE ?? '').trim().toLowerCase();
+  return raw === '1' || raw === 'true' || raw === 'yes';
 }
 
 function readSkipR2MirrorEnv(): boolean {
@@ -155,6 +172,8 @@ function parseArgv(argv: string[]): PipelineCli {
   let toYm = '';
   let explicitMonth = '';
   const backfill = argv.includes('--backfill');
+  // A full `--backfill` is an authoritative rebuild and must overwrite, not union.
+  const mergeFixture = !backfill && !argv.includes('--no-merge') && !readNoMergeEnv();
 
   for (const arg of argv) {
     if (arg.startsWith('--from=')) fromYm = arg.slice('--from='.length).trim();
@@ -174,6 +193,7 @@ function parseArgv(argv: string[]): PipelineCli {
       maxCountries: readMaxCountriesEnv(),
       frankfurterDelayMs: readFrankDelay(),
       force,
+      mergeFixture,
     };
   }
 
@@ -189,6 +209,7 @@ function parseArgv(argv: string[]): PipelineCli {
       maxCountries: readMaxCountriesEnv(),
       frankfurterDelayMs: readFrankDelay(),
       force,
+      mergeFixture,
     };
   }
 
@@ -207,6 +228,7 @@ function parseArgv(argv: string[]): PipelineCli {
     maxCountries: readMaxCountriesEnv(),
     frankfurterDelayMs: readFrankDelay(),
     force,
+    mergeFixture,
   };
 }
 
@@ -673,26 +695,56 @@ async function main(): Promise<void> {
     fixtureLimit != null
       ? allFixtureMonths.slice(Math.max(0, allFixtureMonths.length - fixtureLimit))
       : allFixtureMonths;
-  const fixturePayload = buildLandingFixtureData({
+  const freshFixturePayload = buildLandingFixtureData({
     schema_version: SCHEMA_MARKETING,
     methodology_version: METHODOLOGY_VERSION,
     generated_at: nowIsoFinal,
     fixtureMonths: fixtureWindow,
     byCountryMonth: fixtureRows,
   });
+
+  const fixturePath = resolve(khobzRoot, 'landing/src/data/fixture-snapshot.json');
+  const shardsDir = resolve(khobzRoot, 'landing/public/data/fixture');
+  const previousLoad = loadPreviousPublishedFixture(fixturePath, shardsDir);
+  logPreviousFixtureLoad(previousLoad);
+
+  const prepared = prepareFixtureForPublish({
+    fresh: freshFixturePayload,
+    previous: previousLoad.payload,
+    mergeFixture: cli.mergeFixture,
+    force: cli.force,
+  });
+  if (!prepared.ok) {
+    // biome-ignore lint/suspicious/noConsole: fatal
+    console.error(prepared.reason);
+    process.exit(1);
+  }
+
+  const fixturePayload = prepared.payload;
+  if (prepared.merged) {
+    // biome-ignore lint/suspicious/noConsole: breadcrumbs
+    console.info(
+      `[pipeline] fixture merge — fresh ${freshFixturePayload.months.length}mo over previous ${previousLoad.payload?.months.length ?? 0}mo → ${fixturePayload.months.length}mo`,
+    );
+  }
+
+  const publishSummary = fixturePublishSummary(fixturePayload, {
+    merged: prepared.merged,
+    force: cli.force,
+    advertisedMonthsBeforeHonest: freshFixturePayload.months.length,
+  });
   writeFileSync(
-    resolve(khobzRoot, 'landing/src/data/fixture-snapshot.json'),
-    `${JSON.stringify(fixturePayload, null, 2)}\n`,
+    join(outDir, 'fixture-publish.json'),
+    `${JSON.stringify(publishSummary, null, 2)}\n`,
     'utf8',
   );
-  const { shardCount } = writeLandingFixtureShards(
-    fixturePayload,
-    resolve(khobzRoot, 'landing/public/data/fixture'),
-  );
+
+  writeFileSync(fixturePath, `${JSON.stringify(fixturePayload, null, 2)}\n`, 'utf8');
+  const { shardCount } = writeLandingFixtureShards(fixturePayload, shardsDir);
 
   // biome-ignore lint/suspicious/noConsole: breadcrumbs
   console.info(
-    `[pipeline] OK — persisted ${months.length} month rollups (${countryList.length} countries/view); historical CPI ${totalChained} new + ${totalReplaced} replaced; APK ${cli.skipPersist ? 'skipped' : 'bundled'}; fixture ${fixtureWindow.length} months → landing/src/data/fixture-snapshot.json (+ ${shardCount} Pages shard(s))`,
+    `[pipeline] OK — persisted ${months.length} month rollups (${countryList.length} countries/view); historical CPI ${totalChained} new + ${totalReplaced} replaced; APK ${cli.skipPersist ? 'skipped' : 'bundled'}; fixture ${fixturePayload.months.length} months / ${publishSummary.records} records → landing/src/data/fixture-snapshot.json (+ ${shardCount} Pages shard(s))`,
   );
 }
 

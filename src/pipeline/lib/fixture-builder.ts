@@ -9,7 +9,6 @@ import {
   computeLocalCoverageSummary,
   type LocalCoverageSummary,
 } from '../../engine/local-coverage.js';
-import { deriveLocalProvenanceFromCommodityPrices } from './local-provenance.js';
 import { getRegionForCountry } from '../../shared/countries.js';
 import type {
   CommodityPrice,
@@ -17,6 +16,7 @@ import type {
   Region,
   GlobalTrack as SchemaGlobalTrack,
 } from '../../shared/schema.js';
+import { deriveLocalProvenanceFromCommodityPrices } from './local-provenance.js';
 
 const DISPLAY_NAMES_EN =
   typeof Intl !== 'undefined' ? new Intl.DisplayNames(['en'], { type: 'region' }) : null;
@@ -185,6 +185,70 @@ export function buildCountryDiagnostics(
   };
 }
 
+/**
+ * Same boundary/splice diagnostics as {@link buildCountryDiagnostics}, but driven
+ * by already-serialized `LandingFixtureCountryRecord`s. Used when merging a fresh
+ * pipeline window into a previously published full-history fixture.
+ */
+export function buildCountryDiagnosticsFromRecords(
+  recordsByMonth: Readonly<Record<string, LandingFixtureCountryRecord>>,
+): LandingFixtureCountryDiagnostics {
+  const months = Object.keys(recordsByMonth).sort();
+  const isObserved = (r: LandingFixtureCountryRecord) =>
+    r.estimate_method === 'observed' && r.local_basket_cost > 0;
+  const isEstimatedRec = (r: LandingFixtureCountryRecord) => r.estimate_method !== 'observed';
+
+  const firstObservedMonth =
+    months.find((m) => {
+      const r = recordsByMonth[m];
+      return r ? isObserved(r) : false;
+    }) ?? null;
+  const lastEstimatedMonthBeforeObserved = firstObservedMonth
+    ? ([...months]
+        .filter((m) => {
+          const r = recordsByMonth[m];
+          return m < firstObservedMonth && r ? isEstimatedRec(r) : false;
+        })
+        .pop() ?? null)
+    : null;
+  const observed = firstObservedMonth ? recordsByMonth[firstObservedMonth] : undefined;
+  const estimated = lastEstimatedMonthBeforeObserved
+    ? recordsByMonth[lastEstimatedMonthBeforeObserved]
+    : undefined;
+  const spliceGapPct =
+    observed && estimated && estimated.kki_value > 0
+      ? Number(
+          (((observed.kki_value - estimated.kki_value) / estimated.kki_value) * 100).toFixed(1),
+        )
+      : null;
+
+  const methodCounts = new Map<string, number>();
+  let hasAnnualCpiHistory = false;
+  for (const month of months) {
+    const record = recordsByMonth[month];
+    if (!record) continue;
+    if (record.estimate_method !== 'observed') {
+      methodCounts.set(record.estimate_method, (methodCounts.get(record.estimate_method) ?? 0) + 1);
+    }
+    if (
+      record.source_periodicity === 'annual' &&
+      (record.estimate_method === 'cpi_chained' ||
+        record.estimate_method === 'headline_cpi_chained')
+    ) {
+      hasAnnualCpiHistory = true;
+    }
+  }
+  const dominantEstimateMethod =
+    [...methodCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+  return {
+    first_observed_month: firstObservedMonth,
+    last_estimated_month_before_observed: lastEstimatedMonthBeforeObserved,
+    splice_gap_pct: spliceGapPct,
+    dominant_estimate_method: dominantEstimateMethod,
+    has_annual_cpi_history: hasAnnualCpiHistory,
+  };
+}
+
 export type CountryMonthlyPipelineRow = {
   record: IndexRecord;
   commodityPrices: CommodityPrice[];
@@ -273,9 +337,7 @@ export function buildLandingFixtureData(args: {
           source_tier: p.source_tier,
           weight: weightByCode.get(p.commodity_code) ?? 0,
           ...(p.fill_kind ? { fill_kind: p.fill_kind } : {}),
-          ...(p.last_observation_month
-            ? { last_observation_month: p.last_observation_month }
-            : {}),
+          ...(p.last_observation_month ? { last_observation_month: p.last_observation_month } : {}),
         })),
         global_track: toLandingGlobalTrack(lastRow.schemaGlobalTrack),
         quality_flags: {
