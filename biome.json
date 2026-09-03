@@ -14,7 +14,8 @@
       "!node_modules",
       "!dist",
       "!build",
-      "!**/landing/public/data/fixture/**"
+      "!**/landing/public/data/fixture",
+      "!**/test-landing"
     ]
   },
   "formatter": {
