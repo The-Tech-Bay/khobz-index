@@ -1,5 +1,8 @@
 import { describe, expect, test } from 'bun:test';
-import { getBasketForCountry, resolveBasketMethodologyVersion } from '../../../src/engine/basket.js';
+import {
+  getBasketForCountry,
+  resolveBasketMethodologyVersion,
+} from '../../../src/engine/basket.js';
 
 describe('basket semver fallback', () => {
   test('resolveBasketMethodologyVersion picks highest <= requested', () => {

@@ -2,11 +2,7 @@
  * Derive index-record provenance from FAOSTAT commodity fill metadata.
  */
 
-import type {
-  CommodityPrice,
-  EstimateConfidence,
-  SourcePeriodicity,
-} from '../../shared/schema.js';
+import type { CommodityPrice, EstimateConfidence, SourcePeriodicity } from '../../shared/schema.js';
 
 export interface LocalProvenanceFlags {
   sourcePeriodicity: SourcePeriodicity;
