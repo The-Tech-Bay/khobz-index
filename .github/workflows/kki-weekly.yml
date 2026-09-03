@@ -56,7 +56,11 @@ jobs:
       - name: Run pipeline (fetch → calculate → R2 mirror + summaries)
         env:
           FAOSTAT_CP_JSON_PATH: data/reference/faostat-pp-backfill.json
+          HISTORICAL_CPI_JSON_PATH: data/reference/historical-cpi-envelope.json
         run: bun run src/pipeline/run.ts --from=${{ steps.months.outputs.from }} --to=${{ steps.months.outputs.to }}
+
+      - name: Assert fixture history density (block collapsed publish)
+        run: bun run scripts/assert-fixture-density.ts landing/public/data/fixture
 
       - name: Source degradation warning
         run: |

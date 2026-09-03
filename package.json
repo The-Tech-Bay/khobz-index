@@ -35,6 +35,8 @@
     "pages:build": "bun run pages:shard && cd landing && bun install --frozen-lockfile && bun run build",
     "pages:deploy": "wrangler pages project create khobz-index-landing --production-branch main 2>/dev/null; cd landing && wrangler pages deploy dist --project-name khobz-index-landing",
     "pages:verify": "bash scripts/verify-landing-urls.sh",
+    "fixture:assert-density": "bun run scripts/assert-fixture-density.ts",
+    "fixture:restore-history": "bun run scripts/restore-landing-history.ts",
     "mirror:verify": "bun run scripts/verify-mirror-readiness.ts"
   },
   "devDependencies": {
